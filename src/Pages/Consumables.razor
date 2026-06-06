@@ -1,95 +1,175 @@
 @page "/consumables"
 @using TurnIt.Models
 @using TurnIt.Algorithms
+@using TurnIt.Services
+@inject StorageService Storage
+@inject NavigationManager Navigation
 
 <PageTitle>Consumables</PageTitle>
 
-<h2>Consumables</h2>
-<p>Track items and predict when they'll run out.</p>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Consumables</h2>
+        <button class="btn btn-success" @onclick="ShowAddForm">+ Add Consumable</button>
+    </div>
 
-<button class="btn btn-success mb-3" @onclick="ShowAddForm">+ Add Consumable</button>
-
-@if (showForm)
-{
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5>New Consumable</h5>
-            <div class="mb-3">
-                <label class="form-label">Name</label>
-                <input type="text" class="form-control" @bind="newConsumable.Name" placeholder="e.g., LPG" />
+    @if (showForm)
+    {
+        <div class="card mb-4 border-success">
+            <div class="card-body">
+                <h5 class="card-title">New Consumable</h5>
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" @bind="newConsumable" placeholder="e.g., LPG, Fuel, Medication" />
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Category</label>
+                        <input type="text" class="form-control" @bind="newCategory" placeholder="e.g., Gas, Fuel" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Unit of Measure</label>
+                        <input type="text" class="form-control" @bind="newUnit" placeholder="e.g., L, units, pcs" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Initial Estimate (days)</label>
+                        <input type="number" class="form-control" @bind="newEstimate" min="1" />
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" @onclick="AddConsumable">Create</button>
+                    <button class="btn btn-secondary" @onclick="CancelAddForm">Cancel</button>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Category</label>
-                <input type="text" class="form-control" @bind="newConsumable.Category" placeholder="e.g., Fuel" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Unit of Measure</label>
-                <input type="text" class="form-control" @bind="newConsumable.UnitOfMeasure" placeholder="e.g., L" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Initial Estimate (days)</label>
-                <input type="number" class="form-control" @bind="newConsumable.InitialEstimateDays" />
-            </div>
-            <button class="btn btn-primary" @onclick="AddConsumable">Add</button>
-            <button class="btn btn-secondary" @onclick="CancelAddForm">Cancel</button>
         </div>
-    </div>
-}
-
-@if (consumables.Any())
-{
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Unit</th>
-                    <th>Estimate</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in consumables)
-                {
-                    <tr>
-                        <td>@item.Name</td>
-                        <td>@item.Category</td>
-                        <td>@item.UnitOfMeasure</td>
-                        <td>@item.InitialEstimateDays days</td>
-                        <td>
-                            <button class="btn btn-sm btn-info" @onclick="() => ViewDetails(item.Id)">View</button>
-                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteConsumable(item.Id)">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else
-{
-    <p class="text-muted">No consumables yet. Add one to get started!</p>
-}
-
-@code {
-    private List<Consumable> consumables = [];
-    private bool showForm = false;
-    private Consumable newConsumable = new(Guid.NewGuid(), Guid.Empty, "", "", "")
-    {
-        CreatedAt = DateTime.UtcNow,
-        InitialEstimateDays = 30
-    };
-
-    protected override void OnInitialized()
-    {
-        // Load from localStorage or data source
-        LoadConsumables();
     }
 
-    private void LoadConsumables()
+    @if (consumables.Any())
     {
-        // TODO: Load from storage
+        <div class="row">
+            @foreach (var item in consumables)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Name</h5>
+                            <p class="text-muted mb-3">
+                                <small>@item.Category • @item.UnitOfMeasure</small>
+                            </p>
+
+                            @if (predictions.ContainsKey(item.Id))
+                            {
+                                var pred = predictions[item.Id];
+                                var daysLeft = (pred.PredictedFinishDate - DateOnly.FromDateTime(DateTime.Today)).Days;
+                                var alertClass = daysLeft < 3 ? "alert-danger" : daysLeft < 7 ? "alert-warning" : "alert-info";
+
+                                <div class="alert @alertClass py-2 mb-3">
+                                    <strong>Finish in @daysLeft days</strong>
+                                    <br />
+                                    <small>@pred.PredictedFinishDate.ToString("ddd, MMM d")</small>
+                                    <br />
+                                    <small class="text-muted">Avg: @pred.AverageDurationDays days</small>
+                                </div>
+                            }
+
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-primary" @onclick="() => ViewDetails(item.Id)">Details</button>
+                                <button class="btn btn-sm btn-info" @onclick="() => LogRefill(item.Id)">Log Refill</button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteItem(item.Id)">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <p>No consumables yet. Click <strong>+ Add Consumable</strong> to get started!</p>
+        </div>
+    }
+
+    <!-- Log Refill Modal -->
+    @if (showRefillModal)
+    {
+        <div class="modal show d-block" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Log Refill</h5>
+                        <button type="button" class="btn-close" @onclick="CloseRefillModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Refill Date</label>
+                            <input type="date" class="form-control" @bind="refillDate" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" class="form-control" @bind="refillQuantity" step="0.1" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cost (optional)</label>
+                            <input type="number" class="form-control" @bind="refillCost" step="0.01" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" @bind="refillNotes" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseRefillModal">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="SaveRefill">Save Refill</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Consumable> consumables = new();
+    private Dictionary<Guid, DepletionForecast> predictions = new();
+    private bool showForm = false;
+
+    // Add form
+    private string newConsumable = "";
+    private string newCategory = "";
+    private string newUnit = "";
+    private int newEstimate = 30;
+
+    // Refill modal
+    private bool showRefillModal = false;
+    private Guid selectedConsumableId;
+    private string refillDate = DateTime.Today.ToString("yyyy-MM-dd");
+    private decimal refillQuantity = 1;
+    private decimal? refillCost = null;
+    private string refillNotes = "";
+
+    private Guid _currentSpaceId = Guid.NewGuid(); // In real app, get from auth
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConsumables();
+    }
+
+    private async Task LoadConsumables()
+    {
+        consumables = await Storage.GetConsumablesAsync(_currentSpaceId);
+
+        // Load predictions for each consumable
+        predictions.Clear();
+        foreach (var item in consumables)
+        {
+            var refills = await Storage.GetRefillsAsync(item.Id);
+            var forecast = DepletionForecast.Predict(item, refills);
+            predictions[item.Id] = forecast;
+        }
+
+        StateHasChanged();
     }
 
     private void ShowAddForm()
@@ -100,33 +180,81 @@ else
     private void CancelAddForm()
     {
         showForm = false;
-        newConsumable = new(Guid.NewGuid(), Guid.Empty, "", "", "")
-        {
-            CreatedAt = DateTime.UtcNow,
-            InitialEstimateDays = 30
-        };
+        newConsumable = "";
+        newCategory = "";
+        newUnit = "";
+        newEstimate = 30;
     }
 
-    private void AddConsumable()
+    private async Task AddConsumable()
     {
-        if (string.IsNullOrWhiteSpace(newConsumable.Name))
+        if (string.IsNullOrWhiteSpace(newConsumable))
         {
-            return; // TODO: Show error
+            return;
         }
 
-        consumables.Add(newConsumable);
+        var consumable = new Consumable(
+            Guid.NewGuid(),
+            _currentSpaceId,
+            newConsumable,
+            newCategory,
+            newUnit)
+        {
+            InitialEstimateDays = newEstimate,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await Storage.SaveConsumableAsync(consumable);
+        await LoadConsumables();
         CancelAddForm();
-        // TODO: Persist to storage
     }
 
     private void ViewDetails(Guid id)
     {
-        // TODO: Navigate to details
+        Navigation.NavigateTo($"/consumables/{id}");
     }
 
-    private void DeleteConsumable(Guid id)
+    private void LogRefill(Guid consumableId)
     {
-        consumables.RemoveAll(c => c.Id == id);
-        // TODO: Persist
+        selectedConsumableId = consumableId;
+        refillDate = DateTime.Today.ToString("yyyy-MM-dd");
+        refillQuantity = 1;
+        refillCost = null;
+        refillNotes = "";
+        showRefillModal = true;
+    }
+
+    private void CloseRefillModal()
+    {
+        showRefillModal = false;
+    }
+
+    private async Task SaveRefill()
+    {
+        if (!DateOnly.TryParse(refillDate, out var date))
+        {
+            return;
+        }
+
+        var refill = new RefillEvent(
+            Guid.NewGuid(),
+            selectedConsumableId,
+            date,
+            refillQuantity)
+        {
+            Cost = refillCost,
+            Notes = refillNotes,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await Storage.SaveRefillAsync(refill);
+        await LoadConsumables();
+        CloseRefillModal();
+    }
+
+    private async Task DeleteItem(Guid id)
+    {
+        await Storage.DeleteConsumableAsync(id);
+        await LoadConsumables();
     }
 }

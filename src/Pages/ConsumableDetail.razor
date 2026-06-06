@@ -1,0 +1,233 @@
+@page "/consumables/{id:guid}"
+@using TurnIt.Models
+@using TurnIt.Algorithms
+@using TurnIt.Services
+@inject StorageService Storage
+@inject NavigationManager Navigation
+
+<PageTitle>Consumable Details</PageTitle>
+
+<div class="container mt-4">
+    @if (consumable != null)
+    {
+        <div class="mb-4">
+            <a href="/consumables" class="btn btn-secondary btn-sm">← Back to Consumables</a>
+        </div>
+
+        <h2>@consumable.Name</h2>
+        <p class="text-muted">@consumable.Category • @consumable.UnitOfMeasure</p>
+
+        @if (forecast != null)
+        {
+            var daysLeft = (forecast.PredictedFinishDate - DateOnly.FromDateTime(DateTime.Today)).Days;
+            var alertClass = daysLeft < 3 ? "alert-danger" : daysLeft < 7 ? "alert-warning" : "alert-info";
+
+            <div class="alert @alertClass mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>@daysLeft days remaining</h4>
+                        <p class="mb-0">Finish: <strong>@forecast.PredictedFinishDate.ToString("dddd, MMMM d, yyyy")</strong></p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <p class="mb-0"><small class="text-muted">Average duration: @forecast.AverageDurationDays days</small></p>
+                        <p class="mb-0"><small class="text-muted">Refills logged: @forecast.RefillCount</small></p>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Refill History</h5>
+                    <button class="btn btn-sm btn-primary" @onclick="ShowAddRefillForm">+ Log Refill</button>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (showAddRefillForm)
+                {
+                    <div class="card mb-4 border-primary">
+                        <div class="card-body">
+                            <h6>New Refill</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" class="form-control" @bind="newRefillDate" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" @bind="newRefillQuantity" step="0.1" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Cost (optional)</label>
+                                    <input type="number" class="form-control" @bind="newRefillCost" step="0.01" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Notes (optional)</label>
+                                    <input type="text" class="form-control" @bind="newRefillNotes" />
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" @onclick="SaveNewRefill">Save</button>
+                                <button class="btn btn-secondary btn-sm" @onclick="CancelAddRefillForm">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (refills.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Quantity</th>
+                                    <th>Cost</th>
+                                    <th>Days Since Previous</th>
+                                    <th>Notes</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var refill in refills)
+                                {
+                                    var daysSincePrevious = GetDaysSincePrevious(refill);
+                                    <tr>
+                                        <td>
+                                            <strong>@refill.RefillDate.ToString("MMM d, yyyy")</strong>
+                                        </td>
+                                        <td>@refill.Quantity @consumable.UnitOfMeasure</td>
+                                        <td>@(refill.Cost.HasValue ? refill.Cost.Value.ToString("C") : "-")</td>
+                                        <td>
+                                            @if (daysSincePrevious > 0)
+                                            {
+                                                <badge class="badge bg-info">@daysSincePrevious days</badge>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">@refill.Notes</small>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteRefill(refill.Id)">Delete</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No refills logged yet. Click <strong>+ Log Refill</strong> to start tracking.</p>
+                }
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button class="btn btn-danger" @onclick="DeleteConsumable">Delete Consumable</button>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">Loading...</div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Consumable? consumable;
+    private List<RefillEvent> refills = new();
+    private DepletionForecast? forecast;
+    private bool showAddRefillForm = false;
+
+    private string newRefillDate = DateTime.Today.ToString("yyyy-MM-dd");
+    private decimal newRefillQuantity = 1;
+    private decimal? newRefillCost = null;
+    private string newRefillNotes = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        consumable = await Storage.GetConsumableAsync(Id);
+        if (consumable != null)
+        {
+            refills = await Storage.GetRefillsAsync(consumable.Id);
+            forecast = DepletionForecast.Predict(consumable, refills);
+        }
+        StateHasChanged();
+    }
+
+    private void ShowAddRefillForm()
+    {
+        showAddRefillForm = true;
+        newRefillDate = DateTime.Today.ToString("yyyy-MM-dd");
+        newRefillQuantity = 1;
+        newRefillCost = null;
+        newRefillNotes = "";
+    }
+
+    private void CancelAddRefillForm()
+    {
+        showAddRefillForm = false;
+    }
+
+    private async Task SaveNewRefill()
+    {
+        if (consumable == null || !DateOnly.TryParse(newRefillDate, out var date))
+        {
+            return;
+        }
+
+        var refill = new RefillEvent(
+            Guid.NewGuid(),
+            consumable.Id,
+            date,
+            newRefillQuantity)
+        {
+            Cost = newRefillCost,
+            Notes = newRefillNotes,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await Storage.SaveRefillAsync(refill);
+        await LoadData();
+        CancelAddRefillForm();
+    }
+
+    private async Task DeleteRefill(Guid refillId)
+    {
+        await Storage.DeleteRefillAsync(refillId);
+        await LoadData();
+    }
+
+    private async Task DeleteConsumable()
+    {
+        if (consumable != null)
+        {
+            await Storage.DeleteConsumableAsync(consumable.Id);
+            Navigation.NavigateTo("/consumables");
+        }
+    }
+
+    private int GetDaysSincePrevious(RefillEvent refill)
+    {
+        var index = refills.IndexOf(refill);
+        if (index <= 0) return 0;
+
+        var prevRefill = refills[index - 1];
+        return (refill.RefillDate.ToDateTime(TimeOnly.MinValue) - prevRefill.RefillDate.ToDateTime(TimeOnly.MinValue)).Days;
+    }
+}

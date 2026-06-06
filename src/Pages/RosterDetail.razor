@@ -1,0 +1,266 @@
+@page "/rosters/{id:guid}"
+@using TurnIt.Models
+@using TurnIt.Algorithms
+@using TurnIt.Services
+@inject StorageService Storage
+@inject NavigationManager Navigation
+
+<PageTitle>Roster Schedule</PageTitle>
+
+<div class="container mt-4">
+    @if (roster != null)
+    {
+        <div class="mb-4">
+            <a href="/rosters" class="btn btn-secondary btn-sm">← Back to Rosters</a>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2>@roster.Name</h2>
+                <p class="text-muted">@roster.RotationType • @roster.Members.Count() members</p>
+                @if (!string.IsNullOrEmpty(roster.Description))
+                {
+                    <p>@roster.Description</p>
+                }
+            </div>
+            <div class="col-md-4 text-md-end">
+                <button class="btn btn-sm btn-primary" @onclick="AddMember">+ Add Member</button>
+                <button class="btn btn-sm btn-warning" @onclick="RegenerateSchedule">↻ Regenerate</button>
+            </div>
+        </div>
+
+        <!-- Members Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Members</h5>
+            </div>
+            <div class="card-body">
+                @if (showAddMemberForm)
+                {
+                    <div class="card mb-3 border-primary">
+                        <div class="card-body">
+                            <h6>Add Member</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" @bind="newMemberName" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Email (optional)</label>
+                                    <input type="email" class="form-control" @bind="newMemberEmail" />
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" @onclick="SaveNewMember">Add</button>
+                                <button class="btn btn-secondary btn-sm" @onclick="CancelAddMember">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (roster.Members.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var member in roster.Members)
+                        {
+                            var upcomingSlot = slots.FirstOrDefault(s => s.RosterMemberId == member.Id && !s.IsDone);
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">@member.Name</h6>
+                                        @if (!string.IsNullOrEmpty(member.Email))
+                                        {
+                                            <small class="text-muted">@member.Email</small>
+                                        }
+                                        @if (upcomingSlot != null)
+                                        {
+                                            <br />
+                                            <small class="badge bg-info">Next: @upcomingSlot.SlotDate</small>
+                                        }
+                                    </div>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => RemoveMember(member.Id)">Remove</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No members yet. Click <strong>+ Add Member</strong> to start.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Schedule Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Schedule (Next 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                @if (slots.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>Member</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var slot in slots.Take(30))
+                                {
+                                    var member = roster.Members.FirstOrDefault(m => m.Id == slot.RosterMemberId);
+                                    var isDone = slot.IsDone;
+                                    var isToday = slot.SlotDate == DateOnly.FromDateTime(DateTime.Today);
+                                    var rowClass = isDone ? "table-secondary" : isToday ? "table-warning" : "";
+
+                                    <tr class="@rowClass">
+                                        <td><strong>@slot.SlotDate.ToString("MMM d")</strong></td>
+                                        <td><small class="text-muted">@slot.SlotDate.DayOfWeek</small></td>
+                                        <td>@member?.Name</td>
+                                        <td>
+                                            @if (isDone)
+                                            {
+                                                <badge class="badge bg-success">Done</badge>
+                                            }
+                                            else if (isToday)
+                                            {
+                                                <badge class="badge bg-warning text-dark">Today</badge>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!isDone)
+                                            {
+                                                <button class="btn btn-xs btn-success" @onclick="() => MarkDone(slot.Id)">✓</button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No schedule generated yet. Add members and click <strong>↻ Regenerate</strong>.</p>
+                }
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button class="btn btn-danger" @onclick="DeleteRoster">Delete Roster</button>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">Loading...</div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Roster? roster;
+    private List<RosterSlot> slots = new();
+    private List<RosterMember> members = new();
+
+    private bool showAddMemberForm = false;
+    private string newMemberName = "";
+    private string newMemberEmail = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        roster = await Storage.GetRosterAsync(Id);
+        if (roster != null)
+        {
+            members = await Storage.GetRosterMembersAsync(Id);
+
+            // Generate or load schedule
+            if (!members.Any())
+            {
+                slots = new();
+            }
+            else
+            {
+                slots = RosterGenerator.Generate(roster, members, daysForward: 90);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void AddMember()
+    {
+        showAddMemberForm = true;
+        newMemberName = "";
+        newMemberEmail = "";
+    }
+
+    private void CancelAddMember()
+    {
+        showAddMemberForm = false;
+    }
+
+    private async Task SaveNewMember()
+    {
+        if (roster == null || string.IsNullOrWhiteSpace(newMemberName))
+        {
+            return;
+        }
+
+        var member = new RosterMember(Guid.NewGuid(), roster.Id, newMemberName)
+        {
+            Email = newMemberEmail,
+            AddedAt = DateTime.UtcNow
+        };
+
+        await Storage.SaveRosterMemberAsync(member);
+        await LoadData();
+        CancelAddMember();
+    }
+
+    private async Task RemoveMember(Guid memberId)
+    {
+        await Storage.DeleteRosterMemberAsync(memberId);
+        await LoadData();
+    }
+
+    private void RegenerateSchedule()
+    {
+        if (roster != null)
+        {
+            slots = RosterGenerator.Generate(roster, members, daysForward: 90);
+            StateHasChanged();
+        }
+    }
+
+    private async Task MarkDone(Guid slotId)
+    {
+        var slot = slots.FirstOrDefault(s => s.Id == slotId);
+        if (slot != null)
+        {
+            var doneSlot = slot with { IsDone = true, CompletedAt = DateTime.UtcNow };
+            // In real app, persist to storage
+            slots[slots.IndexOf(slot)] = doneSlot;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteRoster()
+    {
+        if (roster != null)
+        {
+            await Storage.DeleteRosterAsync(roster.Id);
+            Navigation.NavigateTo("/rosters");
+        }
+    }
+}
