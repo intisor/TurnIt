@@ -1,0 +1,139 @@
+@page "/rosters"
+@using TurnIt.Models
+@using TurnIt.Algorithms
+
+<PageTitle>Rosters</PageTitle>
+
+<h2>Rosters</h2>
+<p>Create and manage rotating duty schedules.</p>
+
+<button class="btn btn-success mb-3" @onclick="ShowAddForm">+ Create Roster</button>
+
+@if (showForm)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>New Roster</h5>
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" @bind="newRoster.Name" placeholder="e.g., Cleaning Duty" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" @bind="newRoster.Description" placeholder="Optional description"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Rotation Type</label>
+                <select class="form-select" @bind="newRoster.RotationType">
+                    <option value="@RosterRotationType.Sequential">Sequential</option>
+                    <option value="@RosterRotationType.WeeklyPattern">Weekly Pattern</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-control" @bind="scheduleStartDate" />
+            </div>
+            <button class="btn btn-primary" @onclick="AddRoster">Create</button>
+            <button class="btn btn-secondary" @onclick="CancelAddForm">Cancel</button>
+        </div>
+    </div>
+}
+
+@if (rosters.Any())
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Start Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var roster in rosters)
+                {
+                    <tr>
+                        <td>@roster.Name</td>
+                        <td>@roster.RotationType</td>
+                        <td>@roster.ScheduleStartDate</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" @onclick="() => ViewRoster(roster.Id)">View</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteRoster(roster.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted">No rosters yet. Create one to get started!</p>
+}
+
+@code {
+    private List<Roster> rosters = [];
+    private bool showForm = false;
+    private Roster newRoster = new(Guid.NewGuid(), Guid.Empty, "", RosterRotationType.Sequential)
+    {
+        CreatedAt = DateTime.UtcNow,
+        ScheduleStartDate = DateOnly.FromDateTime(DateTime.Today)
+    };
+    private string scheduleStartDate = DateTime.Today.ToString("yyyy-MM-dd");
+
+    protected override void OnInitialized()
+    {
+        LoadRosters();
+    }
+
+    private void LoadRosters()
+    {
+        // TODO: Load from storage
+    }
+
+    private void ShowAddForm()
+    {
+        showForm = true;
+    }
+
+    private void CancelAddForm()
+    {
+        showForm = false;
+        newRoster = new(Guid.NewGuid(), Guid.Empty, "", RosterRotationType.Sequential)
+        {
+            CreatedAt = DateTime.UtcNow,
+            ScheduleStartDate = DateOnly.FromDateTime(DateTime.Today)
+        };
+        scheduleStartDate = DateTime.Today.ToString("yyyy-MM-dd");
+    }
+
+    private void AddRoster()
+    {
+        if (string.IsNullOrWhiteSpace(newRoster.Name))
+        {
+            return; // TODO: Show error
+        }
+
+        if (DateOnly.TryParse(scheduleStartDate, out var date))
+        {
+            newRoster = newRoster with { ScheduleStartDate = date };
+        }
+
+        rosters.Add(newRoster);
+        CancelAddForm();
+        // TODO: Persist to storage
+    }
+
+    private void ViewRoster(Guid id)
+    {
+        // TODO: Navigate to details
+    }
+
+    private void DeleteRoster(Guid id)
+    {
+        rosters.RemoveAll(r => r.Id == id);
+        // TODO: Persist
+    }
+}
