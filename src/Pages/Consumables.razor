@@ -1,0 +1,132 @@
+@page "/consumables"
+@using TurnIt.Models
+@using TurnIt.Algorithms
+
+<PageTitle>Consumables</PageTitle>
+
+<h2>Consumables</h2>
+<p>Track items and predict when they'll run out.</p>
+
+<button class="btn btn-success mb-3" @onclick="ShowAddForm">+ Add Consumable</button>
+
+@if (showForm)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>New Consumable</h5>
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" @bind="newConsumable.Name" placeholder="e.g., LPG" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <input type="text" class="form-control" @bind="newConsumable.Category" placeholder="e.g., Fuel" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Unit of Measure</label>
+                <input type="text" class="form-control" @bind="newConsumable.UnitOfMeasure" placeholder="e.g., L" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Initial Estimate (days)</label>
+                <input type="number" class="form-control" @bind="newConsumable.InitialEstimateDays" />
+            </div>
+            <button class="btn btn-primary" @onclick="AddConsumable">Add</button>
+            <button class="btn btn-secondary" @onclick="CancelAddForm">Cancel</button>
+        </div>
+    </div>
+}
+
+@if (consumables.Any())
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Unit</th>
+                    <th>Estimate</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in consumables)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.Category</td>
+                        <td>@item.UnitOfMeasure</td>
+                        <td>@item.InitialEstimateDays days</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" @onclick="() => ViewDetails(item.Id)">View</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteConsumable(item.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted">No consumables yet. Add one to get started!</p>
+}
+
+@code {
+    private List<Consumable> consumables = [];
+    private bool showForm = false;
+    private Consumable newConsumable = new(Guid.NewGuid(), Guid.Empty, "", "", "")
+    {
+        CreatedAt = DateTime.UtcNow,
+        InitialEstimateDays = 30
+    };
+
+    protected override void OnInitialized()
+    {
+        // Load from localStorage or data source
+        LoadConsumables();
+    }
+
+    private void LoadConsumables()
+    {
+        // TODO: Load from storage
+    }
+
+    private void ShowAddForm()
+    {
+        showForm = true;
+    }
+
+    private void CancelAddForm()
+    {
+        showForm = false;
+        newConsumable = new(Guid.NewGuid(), Guid.Empty, "", "", "")
+        {
+            CreatedAt = DateTime.UtcNow,
+            InitialEstimateDays = 30
+        };
+    }
+
+    private void AddConsumable()
+    {
+        if (string.IsNullOrWhiteSpace(newConsumable.Name))
+        {
+            return; // TODO: Show error
+        }
+
+        consumables.Add(newConsumable);
+        CancelAddForm();
+        // TODO: Persist to storage
+    }
+
+    private void ViewDetails(Guid id)
+    {
+        // TODO: Navigate to details
+    }
+
+    private void DeleteConsumable(Guid id)
+    {
+        consumables.RemoveAll(c => c.Id == id);
+        // TODO: Persist
+    }
+}
