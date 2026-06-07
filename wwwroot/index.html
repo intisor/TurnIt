@@ -4,16 +4,29 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TurnIt</title>
+    <title>Refyla - Depletion Intelligence & Roster Engine</title>
     <base href="/" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
     <link href="app.css" rel="stylesheet" />
 </head>
 
 <body>
-    <div id="app"></div>
+    <div id="app">
+        <!-- Visual premium loading state -->
+        <div class="loading-container">
+            <div class="spinner-wrapper">
+                <div class="loading-ring"></div>
+                <div class="loading-ring-inner"></div>
+            </div>
+            <h2 class="loading-title">Refyla</h2>
+            <p class="loading-subtitle">Initializing intelligence engine...</p>
+        </div>
+    </div>
 
-    <script src="_framework/blazor.web.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
 </html>
