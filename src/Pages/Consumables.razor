@@ -62,7 +62,7 @@
                             @if (predictions.ContainsKey(item.Id))
                             {
                                 var pred = predictions[item.Id];
-                                var daysLeft = (pred.PredictedFinishDate - DateOnly.FromDateTime(DateTime.Today)).Days;
+                                var daysLeft = pred.PredictedFinishDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
                                 var alertClass = daysLeft < 3 ? "alert-danger" : daysLeft < 7 ? "alert-warning" : "alert-info";
 
                                 <div class="alert @alertClass py-2 mb-3">
@@ -144,7 +144,7 @@
     // Refill modal
     private bool showRefillModal = false;
     private Guid selectedConsumableId;
-    private string refillDate = DateTime.Today.ToString("yyyy-MM-dd");
+    private DateTime refillDate = DateTime.Today;
     private decimal refillQuantity = 1;
     private decimal? refillCost = null;
     private string refillNotes = "";
@@ -165,7 +165,7 @@
         foreach (var item in consumables)
         {
             var refills = await Storage.GetRefillsAsync(item.Id);
-            var forecast = DepletionForecast.Predict(item, refills);
+            var forecast = DepletionForecaster.PredictForecast(item, refills);
             predictions[item.Id] = forecast;
         }
 
@@ -217,7 +217,7 @@
     private void LogRefill(Guid consumableId)
     {
         selectedConsumableId = consumableId;
-        refillDate = DateTime.Today.ToString("yyyy-MM-dd");
+        refillDate = DateTime.Today;
         refillQuantity = 1;
         refillCost = null;
         refillNotes = "";
@@ -231,10 +231,7 @@
 
     private async Task SaveRefill()
     {
-        if (!DateOnly.TryParse(refillDate, out var date))
-        {
-            return;
-        }
+        var date = DateOnly.FromDateTime(refillDate);
 
         var refill = new RefillEvent(
             Guid.NewGuid(),

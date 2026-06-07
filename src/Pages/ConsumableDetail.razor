@@ -19,7 +19,7 @@
 
         @if (forecast != null)
         {
-            var daysLeft = (forecast.PredictedFinishDate - DateOnly.FromDateTime(DateTime.Today)).Days;
+            var daysLeft = forecast.PredictedFinishDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
             var alertClass = daysLeft < 3 ? "alert-danger" : daysLeft < 7 ? "alert-warning" : "alert-info";
 
             <div class="alert @alertClass mt-4">
@@ -149,7 +149,7 @@
     private DepletionForecast? forecast;
     private bool showAddRefillForm = false;
 
-    private string newRefillDate = DateTime.Today.ToString("yyyy-MM-dd");
+    private DateTime newRefillDate = DateTime.Today;
     private decimal newRefillQuantity = 1;
     private decimal? newRefillCost = null;
     private string newRefillNotes = "";
@@ -165,7 +165,7 @@
         if (consumable != null)
         {
             refills = await Storage.GetRefillsAsync(consumable.Id);
-            forecast = DepletionForecast.Predict(consumable, refills);
+            forecast = DepletionForecaster.PredictForecast(consumable, refills);
         }
         StateHasChanged();
     }
@@ -173,7 +173,7 @@
     private void ShowAddRefillForm()
     {
         showAddRefillForm = true;
-        newRefillDate = DateTime.Today.ToString("yyyy-MM-dd");
+        newRefillDate = DateTime.Today;
         newRefillQuantity = 1;
         newRefillCost = null;
         newRefillNotes = "";
@@ -186,10 +186,12 @@
 
     private async Task SaveNewRefill()
     {
-        if (consumable == null || !DateOnly.TryParse(newRefillDate, out var date))
+        if (consumable == null)
         {
             return;
         }
+
+        var date = DateOnly.FromDateTime(newRefillDate);
 
         var refill = new RefillEvent(
             Guid.NewGuid(),
