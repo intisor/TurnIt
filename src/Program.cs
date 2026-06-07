@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using TurnIt;
 using TurnIt.Services;
+using TurnIt.src;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -12,10 +13,3 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<StorageService>();
 
 await builder.Build().RunAsync();
-var app = builder.Build();
-
-// Initialize storage on startup
-var storage = app.Services.GetRequiredService<StorageService>();
-await storage.Initialize();
-
-await app.RunAsync();
