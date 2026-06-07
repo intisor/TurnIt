@@ -5,11 +5,11 @@ using TurnIt.Models;
 /// <summary>
 /// Core algorithms for TurnIt.
 /// </summary>
-public static class DepletionForecast
+public static class DepletionForecaster
 {
     private const int MaxHistoryCount = 3;
-    private const decimal OutlierThreshold = 2.0m;
-    private const decimal OutlierWeight = 0.25m;
+    private const double OutlierThreshold = 2.0;
+    private const double OutlierWeight = 0.25;
 
     /// <summary>
     /// Predict when a consumable will run out.
@@ -36,7 +36,36 @@ public static class DepletionForecast
         // 2+ refills: weighted rolling average
         var durations = ComputeDurations(refills);
         var avgDays = ComputeWeightedAverage(durations);
-        return refills.Last().RefillDate.AddDays(avgDays);
+        return refills.Last().RefillDate.AddDays((int)Math.Round(avgDays));
+    }
+
+    /// <summary>
+    /// Predict when a consumable will run out and return a full forecast.
+    /// </summary>
+    public static DepletionForecast PredictForecast(Consumable consumable, IEnumerable<RefillEvent> history)
+    {
+        var refills = history.OrderBy(r => r.RefillDate).ToList();
+        var predictedDate = Predict(consumable, refills);
+
+        int avgDays = consumable.InitialEstimateDays ?? 30;
+        if (refills.Count > 1)
+        {
+            var durations = ComputeDurations(refills);
+            if (durations.Any())
+            {
+                avgDays = (int)Math.Round(durations.Average());
+            }
+        }
+
+        return new DepletionForecast(
+            Guid.NewGuid(),
+            consumable.Id,
+            predictedDate,
+            avgDays,
+            refills.Count)
+        {
+            CalculatedAt = DateTime.UtcNow
+        };
     }
 
     private static List<int> ComputeDurations(List<RefillEvent> refills)
@@ -51,21 +80,21 @@ public static class DepletionForecast
         return result;
     }
 
-    private static decimal ComputeWeightedAverage(List<int> durations)
+    private static double ComputeWeightedAverage(List<int> durations)
     {
-        if (durations.Count == 0) return 30;
+        if (durations.Count == 0) return 30.0;
 
         var recent = durations.TakeLast(MaxHistoryCount).ToList();
         var simpleAvg = recent.Average();
 
-        decimal weightedSum = 0;
-        decimal weightSum = 0;
+        double weightedSum = 0;
+        double weightSum = 0;
 
         for (int i = 0; i < recent.Count; i++)
         {
             var isOutlier = recent[i] > simpleAvg * OutlierThreshold;
-            var baseWeight = isOutlier ? OutlierWeight : 1.0m;
-            var recencyWeight = 1.0m + (i * 0.1m);
+            var baseWeight = isOutlier ? OutlierWeight : 1.0;
+            var recencyWeight = 1.0 + (i * 0.1);
             var weight = baseWeight * recencyWeight;
 
             weightedSum += recent[i] * weight;
