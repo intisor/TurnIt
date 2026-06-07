@@ -1,7 +1,7 @@
-# Antigravity Chat Context: TurnIt (Refyla)
+# Antigravity Chat Context: TurnFill
 
 ## Project Overview
-**TurnIt** (brand name: **Refyla**) is a lean mobile-first Blazor WebAssembly PWA designed to solve two core problems:
+**TurnFill** is a lean mobile-first Blazor WebAssembly PWA designed to solve two core problems:
 1. **Consumable Depletion Tracking**: Predict when household or personal consumables (LPG, fuel, medications, subscriptions) will run out, learning from refill history via a weighted rolling average.
 2. **Roster Engine**: Manage fair rotating duty schedules (chores, shift rosters, association tasks) with support for sequential and weekly patterns, swaps, and absences.
 
