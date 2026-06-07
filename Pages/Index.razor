@@ -1,30 +1,43 @@
 @page "/"
 
-<PageTitle>TurnIt</PageTitle>
+<PageTitle>Refyla - Depletion Intelligence & Roster Engine</PageTitle>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Consumables</h5>
-                <p class="card-text">Track household items and predict when they'll run out.</p>
-                <a href="/consumables" class="btn btn-primary">Manage Consumables</a>
+<div class="py-5 text-center">
+    <div class="mb-4">
+        <span class="badge bg-warning text-dark uppercase tracking-wider px-3 py-2">MVP v1.0</span>
+    </div>
+    <h1 class="display-4 fw-extrabold text-white mb-3" style="font-weight: 800; font-size: 3.5rem;">
+        Refyla
+    </h1>
+    <p class="lead text-secondary mx-auto mb-5" style="max-width: 600px; font-size: 1.25rem;">
+        Know what's running out. Know who's on next.<br />
+        An intelligent tracking engine for personal consumables and household rosters.
+    </p>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-md-5">
+        <div class="card h-100 p-4">
+            <div class="card-body d-flex flex-column">
+                <div class="mb-4 text-success" style="font-size: 2.5rem;">🛢️</div>
+                <h3 class="card-title mb-3">Depletion Intelligence</h3>
+                <p class="text-secondary flex-grow-1 mb-4">
+                    Predict when medications, LPG, generator fuel, or subscriptions will run out. Log refills and let our algorithm learn from your consumption history.
+                </p>
+                <a href="/consumables" class="btn btn-primary mt-auto py-3">Manage Consumables</a>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Rosters</h5>
-                <p class="card-text">Create fair rotating duty schedules for your household or team.</p>
-                <a href="/rosters" class="btn btn-primary">Manage Rosters</a>
+    <div class="col-md-5">
+        <div class="card h-100 p-4">
+            <div class="card-body d-flex flex-column">
+                <div class="mb-4 text-warning" style="font-size: 2.5rem;">📅</div>
+                <h3 class="card-title mb-3">Roster Engine</h3>
+                <p class="text-secondary flex-grow-1 mb-4">
+                    Create fair rotating duty rosters for student associations, roommates, or team chores. Automatically generate rolling schedules with swap auditing.
+                </p>
+                <a href="/rosters" class="btn btn-primary mt-auto py-3">Manage Rosters</a>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .card {
-        margin-bottom: 20px;
-    }
-</style>
