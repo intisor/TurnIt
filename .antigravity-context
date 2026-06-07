@@ -1,0 +1,56 @@
+# Antigravity Chat Context: TurnIt (Refyla)
+
+## Project Overview
+**TurnIt** (brand name: **Refyla**) is a lean mobile-first Blazor WebAssembly PWA designed to solve two core problems:
+1. **Consumable Depletion Tracking**: Predict when household or personal consumables (LPG, fuel, medications, subscriptions) will run out, learning from refill history via a weighted rolling average.
+2. **Roster Engine**: Manage fair rotating duty schedules (chores, shift rosters, association tasks) with support for sequential and weekly patterns, swaps, and absences.
+
+---
+
+## Core Pillars & Logic
+
+### 1. Depletion Forecasting Algorithm
+Located in [Core.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Algorithms/Core.cs):
+- **0 Refills**: Returns prediction based on the user's `InitialEstimateDays` (defaulting to 30 days) relative to today.
+- **1 Refill**: Returns prediction based on `InitialEstimateDays` relative to the first refill date.
+- **2+ Refills**: Computes actual durations between subsequent refills, applies a recency-biased weighted average over the last 3 durations, dampens outliers (durations > 2x average are weighted at 0.25x), and projects forward from the last refill date.
+
+### 2. Roster Schedule Generator
+Located in [Core.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Algorithms/Core.cs):
+- **Sequential**: Cycles members `A -> B -> C -> A -> B...` daily, starting from a designated member index or the first active member.
+- **Weekly Pattern**: Assigns duties to members based on designated available days of the week (stored in comma-separated integers mapping to `DayOfWeek`).
+- **Custom**: Planned for Phase 2 pattern definitions.
+
+---
+
+## Directory & File Reference
+
+- [Domain Models](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Models/Domain.cs): Immutable records for all data structures (`User`, `Space`, `Consumable`, `RefillEvent`, `Roster`, `RosterMember`, `RosterSlot`, `SwapRequest`).
+- [Algorithms Core](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Algorithms/Core.cs): Prediction and schedule generation logic (`DepletionForecast`, `RosterGenerator`).
+- **Pages**:
+  - [Index.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Pages/Index.razor): Home dashboard.
+  - [Consumables.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Pages/Consumables.razor): List and CRUD operations for consumables.
+  - [Rosters.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Pages/Rosters.razor): List and CRUD operations for rosters.
+- **Components & Layout**:
+  - [MainLayout.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Components/MainLayout.razor): Shared nav menu and layout.
+- **Documentation**:
+  - [README.md](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/README.md): Fast startup reference.
+  - [REFYLA_PRD.md](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/REFYLA_PRD.md) / [Refyla_PRD_v1.0.md](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Refyla_PRD_v1.0.md): Product requirements.
+  - [QUICK_REFERENCE.md](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/QUICK_REFERENCE.md): Algorithm spec sheet.
+
+---
+
+## Development & Testing Instructions
+
+- **Mandatory User Rule**: If converting or working with `.docx` specifications, you **MUST** run `npx mammoth` to convert the `.docx` to markdown first before analyzing or writing code.
+- **Tech Stack**: Blazor WASM (.NET 9), bootstrap.css, and standard C#.
+- **Testing**:
+  Algorithms are pure static functions. To test, create a separate xUnit test project `TurnIt.Tests` referencing the main project, and run `dotnet test`.
+
+---
+
+## Active Roadmap Checklist
+- [ ] Implement `StorageService` for local storage persistence.
+- [ ] Detail view for `Consumables` with refill logging and prediction alerts.
+- [ ] Detail view for `Rosters` displaying generated schedules.
+- [ ] Phase 1 MVP features (VAPID push notifications, iCal export).
