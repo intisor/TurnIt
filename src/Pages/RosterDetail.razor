@@ -17,7 +17,7 @@
         <div class="row mb-4">
             <div class="col-md-8">
                 <h2>@roster.Name</h2>
-                <p class="text-muted">@roster.RotationType • @roster.Members.Count() members</p>
+                <p class="text-muted">@roster.RotationType • @members.Count members</p>
                 @if (!string.IsNullOrEmpty(roster.Description))
                 {
                     <p>@roster.Description</p>
@@ -58,10 +58,10 @@
                     </div>
                 }
 
-                @if (roster.Members.Any())
+                @if (members.Any())
                 {
                     <div class="list-group">
-                        @foreach (var member in roster.Members)
+                        @foreach (var member in members)
                         {
                             var upcomingSlot = slots.FirstOrDefault(s => s.RosterMemberId == member.Id && !s.IsDone);
                             <div class="list-group-item">
@@ -113,7 +113,7 @@
                             <tbody>
                                 @foreach (var slot in slots.Take(30))
                                 {
-                                    var member = roster.Members.FirstOrDefault(m => m.Id == slot.RosterMemberId);
+                                    var member = members.FirstOrDefault(m => m.Id == slot.RosterMemberId);
                                     var isDone = slot.IsDone;
                                     var isToday = slot.SlotDate == DateOnly.FromDateTime(DateTime.Today);
                                     var rowClass = isDone ? "table-secondary" : isToday ? "table-warning" : "";

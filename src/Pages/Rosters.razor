@@ -91,7 +91,7 @@
     private string newRosterName = "";
     private string newRosterDescription = "";
     private RosterRotationType newRosterType = RosterRotationType.Sequential;
-    private string newRosterStartDate = DateTime.Today.ToString("yyyy-MM-dd");
+    private DateTime newRosterStartDate = DateTime.Today;
 
     private Guid _currentSpaceId = Guid.NewGuid(); // In real app, get from auth
 
@@ -117,7 +117,7 @@
         newRosterName = "";
         newRosterDescription = "";
         newRosterType = RosterRotationType.Sequential;
-        newRosterStartDate = DateTime.Today.ToString("yyyy-MM-dd");
+        newRosterStartDate = DateTime.Today;
     }
 
     private async Task AddRoster()
@@ -127,10 +127,7 @@
             return;
         }
 
-        if (!DateOnly.TryParse(newRosterStartDate, out var startDate))
-        {
-            return;
-        }
+        var startDate = DateOnly.FromDateTime(newRosterStartDate);
 
         var roster = new Roster(
             Guid.NewGuid(),
