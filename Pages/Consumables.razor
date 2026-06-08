@@ -5,143 +5,234 @@
 @inject StorageService Storage
 @inject NavigationManager Navigation
 
-<PageTitle>Consumables</PageTitle>
+<PageTitle>TurnFill — Consumables</PageTitle>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Consumables</h2>
-        <button class="btn btn-success" @onclick="ShowAddForm">+ Add Consumable</button>
-    </div>
-
-    @if (showForm)
-    {
-        <div class="card mb-4 border-success">
-            <div class="card-body">
-                <h5 class="card-title">New Consumable</h5>
-                <div class="mb-3">
-                    <label class="form-label">Name</label>
-                    <input type="text" class="form-control" @bind="newConsumable" placeholder="e.g., LPG, Fuel, Medication" />
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Category</label>
-                        <input type="text" class="form-control" @bind="newCategory" placeholder="e.g., Gas, Fuel" />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Unit of Measure</label>
-                        <input type="text" class="form-control" @bind="newUnit" placeholder="e.g., L, units, pcs" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Initial Estimate (days)</label>
-                        <input type="number" class="form-control" @bind="newEstimate" min="1" />
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary" @onclick="AddConsumable">Create</button>
-                    <button class="btn btn-secondary" @onclick="CancelAddForm">Cancel</button>
-                </div>
-            </div>
-        </div>
-    }
-
-    @if (consumables.Any())
-    {
-        <div class="row">
-            @foreach (var item in consumables)
-            {
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">@item.Name</h5>
-                            <p class="text-muted mb-3">
-                                <small>@item.Category • @item.UnitOfMeasure</small>
-                            </p>
-
-                            @if (predictions.ContainsKey(item.Id))
-                            {
-                                var pred = predictions[item.Id];
-                                var daysLeft = pred.PredictedFinishDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
-                                var alertClass = daysLeft < 3 ? "alert-danger" : daysLeft < 7 ? "alert-warning" : "alert-info";
-
-                                <div class="alert @alertClass py-2 mb-3">
-                                    <strong>Finish in @daysLeft days</strong>
-                                    <br />
-                                    <small>@pred.PredictedFinishDate.ToString("ddd, MMM d")</small>
-                                    <br />
-                                    <small class="text-muted">Avg: @pred.AverageDurationDays days</small>
-                                </div>
-                            }
-
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-primary" @onclick="() => ViewDetails(item.Id)">Details</button>
-                                <button class="btn btn-sm btn-info" @onclick="() => LogRefill(item.Id)">Log Refill</button>
-                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteItem(item.Id)">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            <p>No consumables yet. Click <strong>+ Add Consumable</strong> to get started!</p>
-        </div>
-    }
-
-    <!-- Log Refill Modal -->
-    @if (showRefillModal)
-    {
-        <div class="modal show d-block" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Log Refill</h5>
-                        <button type="button" class="btn-close" @onclick="CloseRefillModal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Refill Date</label>
-                            <input type="date" class="form-control" @bind="refillDate" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Quantity</label>
-                            <input type="number" class="form-control" @bind="refillQuantity" step="0.1" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Cost (optional)</label>
-                            <input type="number" class="form-control" @bind="refillCost" step="0.01" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Notes</label>
-                            <textarea class="form-control" @bind="refillNotes" rows="2"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="CloseRefillModal">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="SaveRefill">Save Refill</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
+<!-- Page Header -->
+<div class="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+    <h2 class="font-headline-sm text-headline-sm text-on-surface">Consumables</h2>
+    <button class="flex items-center gap-1.5 font-label-caps text-label-caps text-primary px-3 py-2 rounded-xl bg-primary/10 active:bg-primary/20 transition-colors min-h-[44px]"
+            @onclick="ShowAddForm">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        ADD
+    </button>
 </div>
+
+<!-- Add Consumable Form (inline expansion) -->
+@if (showForm)
+{
+    <div class="mx-4 my-3 bg-surface-container border border-primary/40 rounded-2xl overflow-hidden">
+        <div class="px-4 pt-4 pb-3 border-b border-outline-variant flex items-center justify-between">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">New Consumable</h3>
+            <button class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-variant active:bg-surface-container-high text-on-surface-variant transition-colors"
+                    @onclick="CancelAddForm">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+        </div>
+        <div class="px-4 py-4 space-y-3">
+            <!-- Name -->
+            <div>
+                <label class="font-label-caps text-label-caps text-outline mb-1.5 block" for="f_name">NAME</label>
+                <input id="f_name" type="text"
+                       placeholder="e.g. LPG, Fuel, Medication"
+                       class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:outline-none focus:border-primary font-body-md min-h-[48px]"
+                       @bind="newConsumable" />
+            </div>
+            <!-- Category + Unit -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="font-label-caps text-label-caps text-outline mb-1.5 block" for="f_cat">CATEGORY</label>
+                    <input id="f_cat" type="text" placeholder="e.g. Gas"
+                           class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:outline-none focus:border-primary font-body-md min-h-[48px]"
+                           @bind="newCategory" />
+                </div>
+                <div>
+                    <label class="font-label-caps text-label-caps text-outline mb-1.5 block" for="f_unit">UNIT</label>
+                    <input id="f_unit" type="text" placeholder="e.g. L, kg"
+                           class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:outline-none focus:border-primary font-body-md min-h-[48px]"
+                           @bind="newUnit" />
+                </div>
+            </div>
+            <!-- Estimate -->
+            <div>
+                <label class="font-label-caps text-label-caps text-outline mb-1.5 block" for="f_est">ESTIMATED DURATION (DAYS)</label>
+                <input id="f_est" type="number" min="1"
+                       class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary font-body-md min-h-[48px]"
+                       @bind="newEstimate" />
+            </div>
+            <!-- Actions -->
+            <div class="flex flex-col gap-2 pt-1">
+                <button class="w-full py-3 bg-primary text-on-primary font-label-caps text-label-caps rounded-xl hover:brightness-110 active:scale-[0.98] transition-all min-h-[48px]"
+                        @onclick="AddConsumable">
+                    CREATE
+                </button>
+                <button class="w-full py-3 border border-outline-variant text-on-surface-variant font-label-caps text-label-caps rounded-xl hover:bg-surface-variant transition-colors min-h-[48px]"
+                        @onclick="CancelAddForm">
+                    CANCEL
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- List -->
+@if (consumables.Any())
+{
+    <div class="px-4 py-3 space-y-3">
+        @foreach (var item in consumables)
+        {
+            DepletionForecast? pred = predictions.GetValueOrDefault(item.Id);
+            int daysLeft = pred != null
+                ? pred.PredictedFinishDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber
+                : -1;
+
+            var urgency = daysLeft >= 0 && daysLeft < 3 ? "urgent"
+                         : daysLeft >= 0 && daysLeft < 7 ? "warning"
+                         : "healthy";
+
+            <div class="bg-surface border border-outline-variant rounded-2xl overflow-hidden">
+                <!-- Card header row -->
+                <div class="flex items-start justify-between px-4 pt-4 pb-2">
+                    <div class="flex-1 min-w-0 pr-3">
+                        <h3 class="font-headline-sm text-headline-sm text-on-surface truncate">@item.Name</h3>
+                        <span class="font-body-sm text-on-surface-variant">@item.Category • @item.UnitOfMeasure</span>
+                    </div>
+                    <!-- State badge -->
+                    @if (pred != null)
+                    {
+                        <span class="font-label-caps text-[9px] px-2 py-1 rounded-full shrink-0
+                                     @(urgency == "urgent" ? "bg-state-urgent/20 text-state-urgent" :
+                                       urgency == "warning" ? "bg-state-warning/20 text-state-warning" :
+                                       "bg-state-healthy/20 text-state-healthy")">
+                            @(daysLeft >= 0 ? $"{daysLeft}d left" : "Unknown")
+                        </span>
+                    }
+                </div>
+
+                <!-- Forecast info -->
+                @if (pred != null)
+                {
+                    <div class="px-4 pb-3">
+                        <!-- Days bar -->
+                        <div class="h-1.5 bg-surface-container rounded-full overflow-hidden mb-2">
+                            @{
+                                var totalDays = pred.AverageDurationDays > 0 ? pred.AverageDurationDays : 30;
+                                var pct = Math.Max(0, Math.Min(100, (int)Math.Round(100.0 * daysLeft / totalDays)));
+                                var barColor = urgency == "urgent" ? "bg-state-urgent" : urgency == "warning" ? "bg-state-warning" : "bg-state-healthy";
+                            }
+                            <div class="h-full @barColor rounded-full transition-all duration-500" style="width: @pct%"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-body-sm text-on-surface-variant">Finish: @pred.PredictedFinishDate.ToString("MMM d")</span>
+                            <span class="font-data-mono text-data-mono text-outline">avg @((int)pred.AverageDurationDays)d</span>
+                        </div>
+                    </div>
+                }
+
+                <!-- Divider -->
+                <div class="h-px bg-outline-variant mx-4"></div>
+
+                <!-- Actions row -->
+                <div class="flex items-center gap-2 px-4 py-3">
+                    <button class="flex-1 py-2.5 border border-outline-variant rounded-xl font-label-caps text-label-caps text-on-surface hover:bg-surface-variant active:bg-surface-container transition-colors min-h-[44px]"
+                            @onclick="() => ViewDetails(item.Id)">
+                        DETAILS
+                    </button>
+                    <button class="flex-1 py-2.5 bg-primary/10 border border-primary/30 text-primary rounded-xl font-label-caps text-label-caps hover:bg-primary/20 active:bg-primary/30 transition-colors min-h-[44px]"
+                            @onclick="() => LogRefill(item.Id)">
+                        LOG REFILL
+                    </button>
+                    <button class="w-11 h-11 flex items-center justify-center rounded-xl text-error hover:bg-error-container/20 active:bg-error-container/40 transition-colors border border-transparent hover:border-error/20"
+                            title="Delete"
+                            @onclick="() => DeleteItem(item.Id)">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (!showForm)
+{
+    <div class="flex flex-col items-center justify-center px-8 py-16 text-center">
+        <span class="material-symbols-outlined text-6xl text-outline mb-4" style="font-variation-settings: 'FILL' 0;">inventory_2</span>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">No consumables yet</h3>
+        <p class="text-on-surface-variant font-body-md mb-6">Tap <strong class="text-primary">ADD</strong> to start tracking your first item.</p>
+    </div>
+}
+
+<!-- Log Refill Bottom Sheet -->
+@if (showRefillModal)
+{
+    <div class="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-[2px]" @onclick="CloseRefillModal">
+        <div class="w-full bg-surface-bright rounded-t-2xl overflow-hidden animate-slide-up shadow-2xl border-t border-outline-variant max-h-[90vh] flex flex-col"
+             @onclick:stopPropagation="true">
+            <!-- Handle -->
+            <div class="flex justify-center pt-3 pb-1 shrink-0">
+                <div class="w-10 h-1 bg-outline-variant rounded-full"></div>
+            </div>
+            <div class="overflow-y-auto flex-1">
+                <div class="px-4 pt-2 pb-4 space-y-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-headline-md text-headline-md text-on-surface">Log Refill</h3>
+                        <button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-variant active:bg-surface-container transition-colors"
+                                @onclick="CloseRefillModal">
+                            <span class="material-symbols-outlined text-on-surface-variant">close</span>
+                        </button>
+                    </div>
+                    <!-- Fields -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="font-label-caps text-label-caps text-outline mb-1.5 block">REFILL DATE</label>
+                            <input type="date"
+                                   class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary min-h-[48px]"
+                                   @bind="refillDate" />
+                        </div>
+                        <div>
+                            <label class="font-label-caps text-label-caps text-outline mb-1.5 block">QUANTITY</label>
+                            <input type="number" step="0.1"
+                                   class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary min-h-[48px]"
+                                   @bind="refillQuantity" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="font-label-caps text-label-caps text-outline mb-1.5 block">COST <span class="text-outline-variant normal-case">(optional)</span></label>
+                        <input type="number" step="0.01" placeholder="0.00"
+                               class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary min-h-[48px]"
+                               @bind="refillCost" />
+                    </div>
+                    <div>
+                        <label class="font-label-caps text-label-caps text-outline mb-1.5 block">NOTES <span class="text-outline-variant normal-case">(optional)</span></label>
+                        <textarea rows="2" placeholder="Any details…"
+                                  class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary resize-none"
+                                  @bind="refillNotes"></textarea>
+                    </div>
+                    <div class="flex flex-col gap-2 pt-1">
+                        <button class="w-full py-4 bg-primary text-on-primary font-label-caps text-label-caps rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all min-h-[52px]"
+                                @onclick="SaveRefill">
+                            SAVE REFILL
+                        </button>
+                        <button class="w-full py-3 border border-outline-variant text-on-surface-variant font-label-caps text-label-caps rounded-2xl hover:bg-surface-variant transition-colors min-h-[48px]"
+                                @onclick="CloseRefillModal">
+                            CANCEL
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div style="height: env(safe-area-inset-bottom, 16px)" class="shrink-0"></div>
+        </div>
+    </div>
+}
 
 @code {
     private List<Consumable> consumables = new();
     private Dictionary<Guid, DepletionForecast> predictions = new();
     private bool showForm = false;
 
-    // Add form
     private string newConsumable = "";
     private string newCategory = "";
     private string newUnit = "";
     private int newEstimate = 30;
 
-    // Refill modal
     private bool showRefillModal = false;
     private Guid selectedConsumableId;
     private DateTime refillDate = DateTime.Today;
@@ -149,101 +240,60 @@
     private decimal? refillCost = null;
     private string refillNotes = "";
 
-    private Guid _currentSpaceId = Guid.NewGuid(); // In real app, get from auth
+    private Guid _currentSpaceId = Guid.NewGuid();
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadConsumables();
-    }
+    protected override async Task OnInitializedAsync() => await LoadConsumables();
 
     private async Task LoadConsumables()
     {
         consumables = await Storage.GetConsumablesAsync(_currentSpaceId);
-
-        // Load predictions for each consumable
         predictions.Clear();
         foreach (var item in consumables)
         {
             var refills = await Storage.GetRefillsAsync(item.Id);
-            var forecast = DepletionForecaster.PredictForecast(item, refills);
-            predictions[item.Id] = forecast;
+            predictions[item.Id] = DepletionForecaster.PredictForecast(item, refills);
         }
-
         StateHasChanged();
     }
 
-    private void ShowAddForm()
-    {
-        showForm = true;
-    }
+    private void ShowAddForm() => showForm = true;
 
     private void CancelAddForm()
     {
         showForm = false;
-        newConsumable = "";
-        newCategory = "";
-        newUnit = "";
-        newEstimate = 30;
+        newConsumable = ""; newCategory = ""; newUnit = ""; newEstimate = 30;
     }
 
     private async Task AddConsumable()
     {
-        if (string.IsNullOrWhiteSpace(newConsumable))
-        {
-            return;
-        }
-
-        var consumable = new Consumable(
-            Guid.NewGuid(),
-            _currentSpaceId,
-            newConsumable,
-            newCategory,
-            newUnit)
+        if (string.IsNullOrWhiteSpace(newConsumable)) return;
+        var c = new Consumable(Guid.NewGuid(), _currentSpaceId, newConsumable, newCategory, newUnit)
         {
             InitialEstimateDays = newEstimate,
             CreatedAt = DateTime.UtcNow
         };
-
-        await Storage.SaveConsumableAsync(consumable);
+        await Storage.SaveConsumableAsync(c);
         await LoadConsumables();
         CancelAddForm();
     }
 
-    private void ViewDetails(Guid id)
-    {
-        Navigation.NavigateTo($"/consumables/{id}");
-    }
+    private void ViewDetails(Guid id) => Navigation.NavigateTo($"/consumables/{id}");
 
-    private void LogRefill(Guid consumableId)
+    private void LogRefill(Guid id)
     {
-        selectedConsumableId = consumableId;
-        refillDate = DateTime.Today;
-        refillQuantity = 1;
-        refillCost = null;
-        refillNotes = "";
+        selectedConsumableId = id;
+        refillDate = DateTime.Today; refillQuantity = 1; refillCost = null; refillNotes = "";
         showRefillModal = true;
     }
 
-    private void CloseRefillModal()
-    {
-        showRefillModal = false;
-    }
+    private void CloseRefillModal() => showRefillModal = false;
 
     private async Task SaveRefill()
     {
-        var date = DateOnly.FromDateTime(refillDate);
-
-        var refill = new RefillEvent(
-            Guid.NewGuid(),
-            selectedConsumableId,
-            date,
-            refillQuantity)
+        var refill = new RefillEvent(Guid.NewGuid(), selectedConsumableId, DateOnly.FromDateTime(refillDate), refillQuantity)
         {
-            Cost = refillCost,
-            Notes = refillNotes,
-            CreatedAt = DateTime.UtcNow
+            Cost = refillCost, Notes = refillNotes, CreatedAt = DateTime.UtcNow
         };
-
         await Storage.SaveRefillAsync(refill);
         await LoadConsumables();
         CloseRefillModal();

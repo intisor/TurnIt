@@ -2,112 +2,172 @@
 @inject TurnFillDataService DataService
 @implements IDisposable
 
-<PageTitle>TurnFill - Roster Management</PageTitle>
+<PageTitle>TurnFill — Roster</PageTitle>
 
-<div class="px-margin-page pt-stack-md space-y-stack-lg max-w-4xl mx-auto">
-    <!-- Current Rotation Section -->
-    <section aria-labelledby="rotation-title">
-        <div class="flex items-center justify-between mb-stack-sm">
-            <h2 class="font-headline-sm text-headline-sm text-on-surface" id="rotation-title">Current Rotation</h2>
-            <span class="font-label-caps text-label-caps text-outline px-2 py-1 border border-outline-variant rounded">@(DataService.Members.Count) PERSON CYCLE</span>
+<div class="flex flex-col">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+        <h2 class="font-headline-sm text-headline-sm text-on-surface">Roster</h2>
+        @if (DataService.ActiveRoster != null)
+        {
+            <span class="font-label-caps text-label-caps text-outline">@DataService.Members.Count MEMBERS</span>
+        }
+    </div>
+
+    <!-- Roster Selector -->
+    @if (DataService.Rosters.Count > 1)
+    {
+        <div class="px-4 py-3 border-b border-outline-variant bg-surface-container-low">
+            <label class="font-label-caps text-label-caps text-outline mb-1.5 block">ACTIVE ROSTER</label>
+            <select class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-on-surface font-headline-sm focus:outline-none focus:border-primary min-h-[48px]"
+                    value="@(DataService.ActiveRoster?.Id.ToString())"
+                    @onchange="ChangeRoster">
+                @foreach (var roster in DataService.Rosters)
+                {
+                    <option value="@roster.Id">@roster.Name</option>
+                }
+            </select>
         </div>
-        <!-- Visual Flow Indicator -->
-        <div class="bg-surface-container-low p-stack-md border border-outline-variant rounded-xl">
-            <div class="flex items-center gap-4 overflow-x-auto no-scrollbar">
+    }
+    else if (DataService.ActiveRoster != null)
+    {
+        <div class="px-4 py-3 bg-surface-container-low border-b border-outline-variant flex items-center gap-2">
+            <span class="material-symbols-outlined text-outline text-[18px]">group</span>
+            <span class="font-headline-sm text-on-surface">@DataService.ActiveRoster.Name</span>
+        </div>
+    }
+
+    <!-- Current Rotation Flow -->
+    @if (DataService.Members.Any())
+    {
+        <div class="px-4 pt-4 pb-2">
+            <span class="font-label-caps text-label-caps text-outline mb-3 block">ROTATION ORDER</span>
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
                 @for (int i = 0; i < DataService.Members.Count; i++)
                 {
                     var member = DataService.Members[i];
                     var isFirst = i == 0;
-                    <div class="flex-shrink-0 flex items-center gap-2">
-                        <div class="w-10 h-10 rounded-full @member.ColorClass flex items-center justify-center font-bold text-white shadow-sm @(isFirst ? "ring-2 ring-state-healthy" : "")">@member.Initials</div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="w-11 h-11 rounded-full @member.ColorClass flex items-center justify-center text-white font-bold text-sm @(isFirst ? "ring-2 ring-state-healthy ring-offset-2 ring-offset-background" : "")">
+                                @member.Initials
+                            </div>
+                            @if (isFirst)
+                            {
+                                <span class="font-label-caps text-[8px] text-state-healthy uppercase tracking-wide">On deck</span>
+                            }
+                        </div>
                         @if (i < DataService.Members.Count - 1)
                         {
-                            <span class="material-symbols-outlined text-outline">arrow_forward</span>
+                            <span class="material-symbols-outlined text-outline-variant text-[16px]">chevron_right</span>
                         }
                     </div>
                 }
             </div>
-            <div class="mt-stack-sm text-outline font-label-caps text-label-caps">
-                @if (DataService.Members.Any())
-                {
-                    @:NEXT REFILL: @DataService.Members.First().Name.ToUpper() (IN PROGRESS)
-                }
-            </div>
         </div>
-    </section>
+    }
 
-    <!-- User Cards List -->
-    <section class="space-y-stack-sm">
-        <h2 class="font-label-caps text-label-caps text-outline mb-stack-sm">MANAGE SEQUENCE</h2>
-        
+    <!-- Member List -->
+    <div class="px-4 pt-2 pb-2 space-y-2">
+        <span class="font-label-caps text-label-caps text-outline">MANAGE MEMBERS</span>
+
         @for (int i = 0; i < DataService.Members.Count; i++)
         {
             var member = DataService.Members[i];
             var isCurrent = i == 0;
-            var positionText = isCurrent ? "ON DECK" : "WAITING";
-            var positionClass = isCurrent ? "bg-state-healthy text-white border-transparent" : "text-outline-variant border-outline-variant";
-
-            <div class="bg-surface p-stack-md border border-outline-variant rounded-lg flex items-center gap-gutter transition-all hover:border-primary">
-                <span class="material-symbols-outlined text-outline-variant drag-handle cursor-grab active:cursor-grabbing">drag_indicator</span>
-                <div class="w-12 h-12 rounded-full @member.ColorClass flex items-center justify-center font-headline-sm text-white">@member.Initials</div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                        <h3 class="font-headline-sm text-headline-sm text-on-surface">@member.Name</h3>
-                        <span class="font-label-caps text-label-caps px-2 py-0.5 rounded border @positionClass">@positionText</span>
-                    </div>
-                    <p class="text-on-surface-variant text-sm">@(isCurrent ? "Current turn" : $"Position: {i + 1}")</p>
+            <div class="flex items-center gap-3 bg-surface border border-outline-variant rounded-2xl p-3 active:bg-surface-container transition-colors">
+                <!-- Avatar -->
+                <div class="w-11 h-11 rounded-full @member.ColorClass flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    @member.Initials
                 </div>
-                <div class="flex gap-2">
-                    <button class="px-3 py-1.5 border border-outline-variant text-on-surface font-label-caps text-label-caps hover:bg-surface-variant rounded transition-colors" @onclick="() => SkipMember(member)">SKIP</button>
-                    <button class="w-8 h-8 flex items-center justify-center text-error hover:bg-error-container/20 rounded-full transition-colors" @onclick="() => RemoveMember(member)">
-                        <span class="material-symbols-outlined">delete</span>
+                <!-- Name + badge -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="font-headline-sm text-on-surface truncate">@member.Name</span>
+                        @if (isCurrent)
+                        {
+                            <span class="font-label-caps text-[9px] px-2 py-0.5 rounded-full bg-state-healthy text-white shrink-0">ON DECK</span>
+                        }
+                    </div>
+                    <span class="font-body-sm text-on-surface-variant">Position @(i + 1)</span>
+                </div>
+                <!-- Actions -->
+                <div class="flex items-center gap-1 shrink-0">
+                    <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container active:bg-surface-container-high text-on-surface-variant transition-colors"
+                            title="Skip turn"
+                            @onclick="() => SkipMember(member)">
+                        <span class="material-symbols-outlined text-[18px]">skip_next</span>
+                    </button>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-error-container/20 active:bg-error-container/40 text-error transition-colors"
+                            title="Remove"
+                            @onclick="() => RemoveMember(member)">
+                        <span class="material-symbols-outlined text-[18px]">person_remove</span>
                     </button>
                 </div>
             </div>
         }
 
-        <!-- Add Team Member Form -->
-        <div class="bg-surface p-stack-md border border-outline-variant rounded-lg flex flex-col md:flex-row gap-stack-sm items-stretch md:items-center mt-stack-sm">
-            <input @bind="newMemberName" placeholder="Enter new team member name" class="flex-1 bg-surface-container-low text-on-surface border border-outline-variant px-4 py-2 rounded focus:border-primary focus:ring-0" />
-            <button @onclick="AddMember" class="px-6 py-2 bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container rounded hover:text-on-primary-container transition-all">ADD MEMBER</button>
+        <!-- Add Member Form -->
+        <div class="flex flex-col gap-2 pt-2">
+            <input @bind="newMemberName"
+                   @bind:event="oninput"
+                   @onkeyup="HandleAddKeyUp"
+                   placeholder="Add a team member name…"
+                   class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:outline-none focus:border-primary font-body-md min-h-[48px]" />
+            <button @onclick="AddMember"
+                    disabled="@(string.IsNullOrWhiteSpace(newMemberName))"
+                    class="w-full py-3 bg-primary text-on-primary font-label-caps text-label-caps rounded-xl hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all min-h-[48px]">
+                ADD MEMBER
+            </button>
         </div>
-    </section>
+    </div>
 
-    <!-- Group Settings Section -->
-    <section class="bg-surface-container p-stack-md border border-outline-variant rounded-xl mt-stack-lg">
-        <h2 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Global Rules</h2>
-        <div class="space-y-stack-sm">
-            <label class="flex items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors cursor-pointer">
-                <span class="font-body-md">Auto-skip if away</span>
-                <input checked class="w-10 h-5 rounded-full bg-surface-variant border-none text-primary focus:ring-primary" type="checkbox"/>
-            </label>
-            <div class="h-px bg-outline-variant mx-stack-sm"></div>
-            <label class="flex items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors cursor-pointer">
-                <span class="font-body-md">Notification before turn</span>
-                <input class="w-10 h-5 rounded-full bg-surface-variant border-none text-primary focus:ring-primary" type="checkbox"/>
-            </label>
-            <div class="h-px bg-outline-variant mx-stack-sm"></div>
-            
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors gap-2">
-                <span class="font-body-md">Rotation Logic</span>
-                <select class="bg-surface-container-high border border-outline-variant rounded p-1 text-on-surface focus:outline-none focus:border-primary" @bind="selectedRotationType">
-                    <option value="@TurnIt.Models.RosterRotationType.Sequential">FIFO Sequential</option>
-                    <option value="@TurnIt.Models.RosterRotationType.WeeklyPattern">Weekly Pattern</option>
-                    <option value="@TurnIt.Models.RosterRotationType.Custom">Custom</option>
-                </select>
-            </div>
-            
-            <div class="h-px bg-outline-variant mx-stack-sm"></div>
-            
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors gap-2">
-                <span class="font-body-md">Schedule Start Date</span>
-                <div class="flex items-center gap-2">
-                    <input type="date" class="bg-surface-container-high border border-outline-variant rounded p-1 text-on-surface focus:outline-none focus:border-primary" @bind="selectedStartDate" />
-                    <button class="px-3 py-1 bg-primary-container text-on-primary-container font-label-caps text-[10px] rounded hover:brightness-110" @onclick="UpdateConfig">APPLY</button>
-                </div>
-            </div>
+    <!-- Roster Settings -->
+    <div class="mx-4 my-4 bg-surface-container rounded-2xl border border-outline-variant overflow-hidden">
+        <div class="px-4 py-3 border-b border-outline-variant">
+            <span class="font-label-caps text-label-caps text-outline">ROSTER SETTINGS</span>
         </div>
-    </section>
+
+        <!-- Rotation Logic -->
+        <div class="px-4 py-3 border-b border-outline-variant">
+            <label class="font-label-caps text-label-caps text-on-surface-variant mb-2 block">ROTATION LOGIC</label>
+            <select class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary min-h-[48px]"
+                    @bind="selectedRotationType">
+                <option value="@TurnIt.Models.RosterRotationType.Sequential">FIFO Sequential</option>
+                <option value="@TurnIt.Models.RosterRotationType.WeeklyPattern">Weekly Pattern</option>
+                <option value="@TurnIt.Models.RosterRotationType.Custom">Custom</option>
+            </select>
+        </div>
+
+        <!-- Start Date -->
+        <div class="px-4 py-3 border-b border-outline-variant">
+            <label class="font-label-caps text-label-caps text-on-surface-variant mb-2 block">SCHEDULE START DATE</label>
+            <input type="date"
+                   class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary min-h-[48px]"
+                   @bind="selectedStartDate" />
+        </div>
+
+        <!-- Auto-skip toggle -->
+        <label class="flex items-center justify-between px-4 py-3 border-b border-outline-variant cursor-pointer">
+            <div>
+                <span class="font-body-md text-on-surface block">Auto-skip if away</span>
+                <span class="font-body-sm text-on-surface-variant">Skip member automatically when marked unavailable</span>
+            </div>
+            <div class="relative ml-4 shrink-0">
+                <input type="checkbox" checked class="sr-only peer" />
+                <div class="w-11 h-6 rounded-full bg-primary/30 peer-checked:bg-primary transition-colors"></div>
+                <div class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-surface-bright shadow peer-checked:translate-x-5 transition-transform"></div>
+            </div>
+        </label>
+
+        <!-- Apply button -->
+        <div class="px-4 py-3">
+            <button @onclick="UpdateConfig"
+                    class="w-full py-3 bg-primary-container text-on-primary-container font-label-caps text-label-caps rounded-xl hover:brightness-110 active:scale-95 transition-all min-h-[48px]">
+                APPLY SETTINGS
+            </button>
+        </div>
+    </div>
 </div>
 
 @code {
@@ -117,7 +177,18 @@
 
     protected override void OnInitialized()
     {
-        DataService.OnStateChanged += StateHasChanged;
+        DataService.OnStateChanged += HandleStateChanged;
+        UpdateLocalState();
+    }
+
+    private void HandleStateChanged()
+    {
+        UpdateLocalState();
+        StateHasChanged();
+    }
+
+    private void UpdateLocalState()
+    {
         if (DataService.ActiveRoster != null)
         {
             selectedRotationType = DataService.ActiveRoster.RotationType;
@@ -127,18 +198,25 @@
 
     public void Dispose()
     {
-        DataService.OnStateChanged -= StateHasChanged;
+        DataService.OnStateChanged -= HandleStateChanged;
+    }
+
+    private async Task ChangeRoster(ChangeEventArgs e)
+    {
+        if (e.Value != null && Guid.TryParse(e.Value.ToString(), out var rosterId))
+            await DataService.SetActiveRoster(rosterId);
+    }
+
+    private async Task HandleAddKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await AddMember();
     }
 
     private async Task SkipMember(RosterParticipant member)
-    {
-        await DataService.SkipMember(member.Id);
-    }
+        => await DataService.SkipMember(member.Id);
 
     private async Task RemoveMember(RosterParticipant member)
-    {
-        await DataService.RemoveMember(member.Id);
-    }
+        => await DataService.RemoveMember(member.Id);
 
     private async Task AddMember()
     {
@@ -150,7 +228,5 @@
     }
 
     private async Task UpdateConfig()
-    {
-        await DataService.UpdateRosterConfig(selectedRotationType, selectedStartDate);
-    }
+        => await DataService.UpdateRosterConfig(selectedRotationType, selectedStartDate);
 }

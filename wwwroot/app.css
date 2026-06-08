@@ -1,35 +1,100 @@
-/* TurnFill App-wide CSS (Tailwind-compatible) */
+/* ============================================================
+   TurnFill — Mobile-First Global CSS
+   ============================================================ */
 
-/* Blazor Error UI */
+/* --- CSS Custom Properties for Safe Areas (notch/home bar) --- */
+:root {
+    --safe-top:    env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left:   env(safe-area-inset-left, 0px);
+    --safe-right:  env(safe-area-inset-right, 0px);
+}
+
+/* --- Base Body --- */
+body {
+    /* Let the browser handle natural height — no artificial desktop min-height */
+    min-height: 100dvh;
+    overscroll-behavior-y: none; /* prevent pull-to-refresh bouncing */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --- Blazor Error UI --- */
 #blazor-error-ui {
-    background: lightyellow;
+    background: #1d2027;
+    color: #ffb4ab;
+    border-top: 1px solid #93000a;
     bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.5);
     display: none;
     left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    padding: 0.75rem 1.25rem calc(0.75rem + var(--safe-bottom)) 1.25rem;
     position: fixed;
     width: 100%;
     z-index: 1000;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
 }
 
 #blazor-error-ui .dismiss {
     cursor: pointer;
     position: absolute;
     right: 0.75rem;
-    top: 0.5rem;
+    top: 0.75rem;
+    font-size: 18px;
 }
 
-/* Tailwind-based Flat UI active states and animations from Stitch */
-button:active { 
-    transform: scale(0.98); 
+/* --- Micro-interaction: button press --- */
+button:active {
+    transform: scale(0.97);
 }
 
-.fill-bar { 
-    transition: height 0.5s ease-in-out; 
+/* --- Fill Bar animation (depletion level) --- */
+.fill-bar {
+    transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-body {
-    min-height: max(884px, 100dvh);
+/* --- Bottom Sheet slide-up animation --- */
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
+.animate-slide-up {
+    animation: slideUp 0.28s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+/* --- Slide-over panel animation (from right) --- */
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+}
+
+.slide-over-enter {
+    transform: translateX(100%);
+}
+
+.slide-over-active {
+    animation: slideInRight 0.32s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+/* --- Scrollbar hide utility --- */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* --- Loading spinner --- */
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* --- Safe area padding helpers --- */
+.pb-safe {
+    padding-bottom: var(--safe-bottom);
+}
+
+.pt-safe {
+    padding-top: var(--safe-top);
+}

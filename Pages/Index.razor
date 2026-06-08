@@ -3,51 +3,83 @@
 @inject TurnFillDataService DataService
 @implements IDisposable
 
-<PageTitle>TurnFill - Dashboard</PageTitle>
+<PageTitle>TurnFill — Dashboard</PageTitle>
 
-<!-- Header Text -->
-<div class="pb-stack-sm pt-stack-sm flex justify-between items-end border-b border-outline-variant">
-    <h2 class="font-headline-md text-headline-md text-on-surface">Resource Status</h2>
-    <span class="font-data-mono text-data-mono text-on-surface-variant">@DataService.Resources.Count Items</span>
+<!-- Page Header -->
+<div class="flex justify-between items-center px-4 py-3 border-b border-outline-variant">
+    <h2 class="font-headline-sm text-headline-sm text-on-surface">Resources</h2>
+    <span class="font-label-caps text-label-caps text-outline">@DataService.Resources.Count ITEMS</span>
 </div>
 
-@foreach (var item in DataService.Resources)
+@if (!DataService.Resources.Any())
 {
-    var borderHoverClass = "group-hover:" + item.StateBorderColorClass;
-    var buttonClass = item.State == ResourceState.Urgent 
-        ? $"{item.StateColorClass} text-white border-none px-6 py-2 rounded-lg font-label-caps text-label-caps uppercase tracking-wider transition-colors hover:brightness-110 active:scale-95 shadow-none"
-        : $"bg-surface-variant text-on-surface-variant hover:{item.StateColorClass} hover:text-white border border-outline-variant hover:{item.StateBorderColorClass} px-4 py-2 rounded-lg font-label-caps text-label-caps uppercase tracking-wider transition-colors";
-    
-    var buttonText = item.State == ResourceState.Urgent ? "Refill" : "Log Use";
+    <!-- Empty State -->
+    <div class="flex flex-col items-center justify-center px-8 py-16 text-center">
+        <span class="material-symbols-outlined text-6xl text-outline mb-4" style="font-variation-settings: 'FILL' 0;">inventory_2</span>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">No resources yet</h3>
+        <p class="text-on-surface-variant font-body-md mb-6">Tap the <strong class="text-primary">+</strong> button to track your first consumable.</p>
+    </div>
+}
+else
+{
+    <div class="px-4 py-3 space-y-3">
+        @foreach (var item in DataService.Resources)
+        {
+            var buttonClass = item.State == ResourceState.Urgent
+                ? $"{item.StateColorClass} text-white border-none py-3 px-5 rounded-xl font-label-caps text-label-caps uppercase tracking-wider active:scale-95 shadow-sm"
+                : $"bg-surface-container text-on-surface-variant border border-outline-variant py-3 px-5 rounded-xl font-label-caps text-label-caps uppercase tracking-wider active:scale-95";
+            var buttonText = item.State == ResourceState.Urgent ? "Refill!" : "Log Use";
 
-    <article @onclick="@(() => NavigateToDetail(item.Id))" class="relative w-full h-48 bg-surface rounded-xl overflow-hidden border border-outline-variant cursor-pointer group mb-stack-md">
-        <!-- Vertical Fill Indicator -->
-        <div class="absolute bottom-0 left-0 w-full @(item.StateColorClass) opacity-20 fill-bar" style="height: @(item.CurrentLevelPercentage)%;"></div>
-        
-        <div class="relative z-10 w-full h-full flex flex-col justify-between p-stack-md">
-            <div class="flex justify-between items-start w-full">
-                <h3 class="font-headline-md text-headline-md text-on-surface">@item.Name</h3>
-                
-                @* Roster chip removed for now *@
-            </div>
-            
-            <div class="flex justify-between items-end w-full">
-                <div class="flex flex-col">
-                    <span class="font-label-caps text-label-caps @(item.StateTextColorClass) uppercase tracking-wider mb-1">
-                        @(item.State == ResourceState.Urgent ? "Urgent" : item.State == ResourceState.Depleting ? "Depleting" : "Healthy")
-                    </span>
-                    <span class="font-display-lg text-display-lg text-on-surface leading-none">@item.CurrentLevelPercentage%</span>
+            <article @onclick="@(() => NavigateToDetail(item.Id))"
+                     class="relative w-full rounded-2xl overflow-hidden border border-outline-variant bg-surface cursor-pointer active:scale-[0.99] transition-transform">
+                <!-- Level fill bar (vertical, behind content) -->
+                <div class="absolute bottom-0 left-0 w-full @(item.StateColorClass) opacity-[0.12] fill-bar transition-all duration-700"
+                     style="height: @(item.CurrentLevelPercentage)%;"></div>
+
+                <div class="relative z-10 p-4">
+                    <!-- Top row: name + state badge -->
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="font-headline-sm text-headline-sm text-on-surface leading-tight pr-2">@item.Name</h3>
+                        <span class="font-label-caps text-[9px] uppercase tracking-widest px-2 py-1 rounded-full border shrink-0
+                                     @(item.State == ResourceState.Urgent ? "bg-state-urgent/20 text-state-urgent border-state-urgent/40" :
+                                       item.State == ResourceState.Depleting ? "bg-state-warning/20 text-state-warning border-state-warning/40" :
+                                       "bg-state-healthy/20 text-state-healthy border-state-healthy/40")">
+                            @(item.State == ResourceState.Urgent ? "Urgent" : item.State == ResourceState.Depleting ? "Low" : "OK")
+                        </span>
+                    </div>
+
+                    <!-- Middle: big percentage + assignee -->
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <span class="font-display-lg text-display-lg text-on-surface leading-none">@item.CurrentLevelPercentage<span class="text-2xl text-on-surface-variant font-normal">%</span></span>
+                            @if (item.Forecast != null)
+                            {
+                                <p class="font-label-caps text-label-caps text-outline mt-1">~@((int)item.Forecast.AverageDurationDays) DAYS AVG</p>
+                            }
+                        </div>
+
+                        <!-- Assignee + Action -->
+                        <div class="flex flex-col items-end gap-2">
+                            @if (item.CurrentAssignee != null)
+                            {
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-label-caps text-[9px] text-outline uppercase">Turn:</span>
+                                    <div class="w-7 h-7 rounded-full @item.CurrentAssignee.ColorClass flex items-center justify-center text-white text-[11px] font-bold">
+                                        @item.CurrentAssignee.Initials
+                                    </div>
+                                </div>
+                            }
+                            <button @onclick="() => PromptRefill(item)"
+                                    @onclick:stopPropagation="true"
+                                    class="@buttonClass min-h-[44px]">
+                                @buttonText
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                
-                <button @onclick="() => PromptRefill(item)" @onclick:stopPropagation="true" class="@buttonClass">
-                    @buttonText
-                </button>
-            </div>
-        </div>
-        
-        <!-- Active focus border simulation -->
-        <div class="absolute inset-0 border-2 border-transparent @borderHoverClass rounded-xl pointer-events-none transition-colors"></div>
-    </article>
+            </article>
+        }
+    </div>
 }
 
 <RefillActionOverlay @bind-IsVisible="showRefillPrompt" TargetResource="selectedResource" />

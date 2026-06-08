@@ -1,97 +1,103 @@
 @if (IsVisible && TargetResource != null)
 {
-    <!-- Overlay / Bottom Sheet Container -->
-    <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-[2px]" @onclick="Close">
-        <!-- Bottom Sheet -->
-        <div class="w-full max-w-2xl bg-surface-bright rounded-t-xl overflow-hidden animate-slide-up shadow-2xl border-t border-x border-outline-variant" @onclick:stopPropagation="true">
-            <!-- Drag Handle Decor -->
-            <div class="w-full flex justify-center py-stack-sm">
-                <div class="w-12 h-1 bg-outline-variant rounded-full"></div>
+    <!-- Backdrop -->
+    <div class="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-[2px]" @onclick="Close">
+        <!-- Bottom Sheet — full width -->
+        <div class="w-full bg-surface-bright rounded-t-2xl overflow-hidden animate-slide-up shadow-2xl border-t border-outline-variant max-h-[90vh] flex flex-col"
+             @onclick:stopPropagation="true">
+
+            <!-- Drag handle -->
+            <div class="flex justify-center pt-3 pb-1 shrink-0">
+                <div class="w-10 h-1 bg-outline-variant rounded-full"></div>
             </div>
 
-            <div class="px-margin-page pb-stack-lg pt-stack-sm">
-                <!-- Header -->
-                <div class="flex items-start justify-between mb-stack-md">
-                    <div class="flex flex-col">
-                        <span class="font-label-caps text-label-caps text-roster-4 mb-base">ACTION REQUIRED</span>
-                        <h2 class="font-headline-md text-headline-md">Confirm Refill for @TargetResource.Name?</h2>
+            <div class="overflow-y-auto flex-1">
+                <div class="px-4 pt-2 pb-4">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <span class="font-label-caps text-label-caps text-roster-4 mb-1 block">LOG REFILL</span>
+                            <h2 class="font-headline-md text-headline-md text-on-surface">@TargetResource.Name</h2>
+                        </div>
+                        <div class="w-11 h-11 rounded-2xl bg-roster-4/10 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-roster-4 text-[22px]">sync</span>
+                        </div>
                     </div>
-                    <div class="bg-surface-container-highest p-stack-sm rounded-lg border border-outline-variant">
-                        <span class="material-symbols-outlined text-roster-4">sync</span>
-                    </div>
-                </div>
 
-                @if (TargetResource.CurrentAssignee != null)
-                {
-                    <!-- Highlight Section: Next Person -->
-                    <div class="bg-surface-container-low border-2 @TargetResource.CurrentAssignee.ColorClass.Replace("bg-", "border-") p-stack-md rounded-lg mb-stack-lg flex items-center gap-stack-md">
-                        <div class="relative">
-                            <div class="w-16 h-16 rounded-full border-2 @TargetResource.CurrentAssignee.ColorClass.Replace("bg-", "border-") @TargetResource.CurrentAssignee.ColorClass flex items-center justify-center text-white text-2xl font-bold">
+                    <!-- Assignee block -->
+                    @if (TargetResource.CurrentAssignee != null)
+                    {
+                        <div class="flex items-center gap-3 bg-surface-container rounded-2xl p-3 mb-4 border border-outline-variant">
+                            <div class="w-12 h-12 rounded-full @TargetResource.CurrentAssignee.ColorClass flex items-center justify-center text-white text-xl font-bold shrink-0">
                                 @TargetResource.CurrentAssignee.Initials
                             </div>
-                            <div class="absolute -bottom-1 -right-1 @TargetResource.CurrentAssignee.ColorClass text-white p-1 rounded-full border-2 border-surface-bright">
-                                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                            <div class="flex-1 min-w-0">
+                                <span class="font-label-caps text-label-caps text-outline block mb-0.5">CURRENT TURN</span>
+                                <span class="font-headline-sm text-on-surface block">@TargetResource.CurrentAssignee.Name</span>
+                                <span class="font-body-sm text-on-surface-variant block">This refill will be logged to their history.</span>
                             </div>
                         </div>
-                        <div class="flex-grow">
-                            <span class="font-label-caps text-label-caps @TargetResource.CurrentAssignee.ColorClass.Replace("bg-", "text-")">CURRENT TURN</span>
-                            <p class="font-headline-sm text-headline-sm">@TargetResource.CurrentAssignee.Name</p>
-                            <p class="text-on-surface-variant font-body-md">Completing this refill will log 1 activity to @(TargetResource.CurrentAssignee.Name)'s history.</p>
-                        </div>
-                    </div>
-                }
+                    }
 
-                <!-- Refill Details Form -->
-                <div class="space-y-stack-sm mb-stack-lg">
-                    <div class="grid grid-cols-2 gap-stack-md">
-                        <div>
-                            <label class="block font-label-caps text-label-caps text-outline mb-1">REFILL DATE</label>
-                            <input type="date" class="w-full bg-surface-container-high border border-outline-variant rounded p-2 text-on-surface focus:outline-none focus:border-primary" @bind="refillDate" />
+                    <!-- Form fields -->
+                    <div class="space-y-3 mb-5">
+                        <!-- Date + Quantity — stacked on mobile, side-by-side on sm -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="font-label-caps text-label-caps text-outline mb-1.5 block">REFILL DATE</label>
+                                <input type="date"
+                                       class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary font-body-md min-h-[48px]"
+                                       @bind="refillDate" />
+                            </div>
+                            <div>
+                                <label class="font-label-caps text-label-caps text-outline mb-1.5 block">QUANTITY</label>
+                                <input type="number" step="0.1"
+                                       class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary font-body-md min-h-[48px]"
+                                       @bind="refillQuantity" />
+                            </div>
                         </div>
-                        <div>
-                            <label class="block font-label-caps text-label-caps text-outline mb-1">QUANTITY</label>
-                            <input type="number" step="0.1" class="w-full bg-surface-container-high border border-outline-variant rounded p-2 text-on-surface focus:outline-none focus:border-primary" @bind="refillQuantity" />
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block font-label-caps text-label-caps text-outline mb-1">COST (OPTIONAL)</label>
-                        <input type="number" step="0.01" class="w-full bg-surface-container-high border border-outline-variant rounded p-2 text-on-surface focus:outline-none focus:border-primary" @bind="refillCost" placeholder="0.00" />
-                    </div>
-                    <div>
-                        <label class="block font-label-caps text-label-caps text-outline mb-1">NOTES</label>
-                        <textarea class="w-full bg-surface-container-high border border-outline-variant rounded p-2 text-on-surface focus:outline-none focus:border-primary" rows="2" @bind="refillNotes" placeholder="Add any details about this refill..."></textarea>
-                    </div>
-                </div>
 
-                <!-- Action Buttons -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-md">
-                    <button class="w-full py-4 px-stack-md border border-outline font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-variant transition-colors rounded-lg flex items-center justify-center gap-base" @onclick="Close">
-                        CANCEL
-                    </button>
-                    <button class="w-full py-4 px-stack-md bg-roster-4 text-on-tertiary-fixed font-label-caps text-label-caps font-bold hover:brightness-110 active:scale-95 transition-all rounded-lg flex items-center justify-center gap-base" @onclick="Confirm">
-                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                        CONFIRM &amp; LOG
-                    </button>
+                        <div>
+                            <label class="font-label-caps text-label-caps text-outline mb-1.5 block">COST <span class="text-outline-variant normal-case">(optional)</span></label>
+                            <input type="number" step="0.01" placeholder="0.00"
+                                   class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary font-body-md min-h-[48px]"
+                                   @bind="refillCost" />
+                        </div>
+
+                        <div>
+                            <label class="font-label-caps text-label-caps text-outline mb-1.5 block">NOTES <span class="text-outline-variant normal-case">(optional)</span></label>
+                            <textarea rows="2" placeholder="Any details about this refill…"
+                                      class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary font-body-md resize-none"
+                                      @bind="refillNotes"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Actions — Confirm on top (primary CTA), Cancel below -->
+                    <div class="flex flex-col gap-2">
+                        <button class="w-full py-4 bg-roster-4 text-on-tertiary-fixed font-label-caps text-label-caps font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] hover:brightness-110 transition-all min-h-[52px]"
+                                @onclick="Confirm">
+                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            CONFIRM &amp; LOG
+                        </button>
+                        <button class="w-full py-3 border border-outline-variant font-label-caps text-label-caps text-on-surface-variant rounded-2xl hover:bg-surface-variant active:bg-surface-container transition-colors min-h-[48px]"
+                                @onclick="Close">
+                            CANCEL
+                        </button>
+                    </div>
                 </div>
             </div>
-            <!-- Safe area bottom padding -->
-            <div class="h-8"></div>
+
+            <!-- Safe area spacer -->
+            <div style="height: env(safe-area-inset-bottom, 16px)" class="shrink-0"></div>
         </div>
     </div>
 }
 
 @code {
-    [Parameter]
-    public bool IsVisible { get; set; }
-
-    [Parameter]
-    public EventCallback<bool> IsVisibleChanged { get; set; }
-
-    [Parameter]
-    public Resource? TargetResource { get; set; }
-
-    [Inject]
-    public TurnFillDataService DataService { get; set; } = default!;
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public Resource? TargetResource { get; set; }
+    [Inject] public TurnFillDataService DataService { get; set; } = default!;
 
     private DateTime refillDate = DateTime.Today;
     private decimal refillQuantity = 1m;
@@ -100,13 +106,7 @@
 
     protected override void OnParametersSet()
     {
-        if (IsVisible)
-        {
-            refillDate = DateTime.Today;
-            refillQuantity = 1m;
-            refillCost = null;
-            refillNotes = "";
-        }
+        if (IsVisible) { refillDate = DateTime.Today; refillQuantity = 1m; refillCost = null; refillNotes = ""; }
     }
 
     private async Task Close()

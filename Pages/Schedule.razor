@@ -2,110 +2,131 @@
 @inject TurnFillDataService DataService
 @implements IDisposable
 
-<PageTitle>TurnFill - Schedule</PageTitle>
+<PageTitle>TurnFill — Schedule</PageTitle>
 
-<!-- TopAppBar -->
-<header class="w-full sticky top-0 bg-surface-container border-b border-outline-variant flex items-center justify-between px-margin-page h-16 z-50">
+<!-- Page Header -->
+<div class="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
     <div class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary">calendar_today</span>
-        <h1 class="font-headline-md text-headline-md font-bold text-primary">Schedule</h1>
+        <span class="material-symbols-outlined text-primary text-[20px]">calendar_today</span>
+        <h2 class="font-headline-sm text-headline-sm text-on-surface">Schedule</h2>
     </div>
-</header>
-
-<div class="px-margin-page pt-stack-md space-y-stack-lg max-w-4xl mx-auto pb-32">
-    <section>
-        <div class="flex items-center justify-between mb-stack-sm">
-            <h2 class="font-headline-sm text-headline-sm text-on-surface">Next 90 Days</h2>
-            <button class="font-label-caps text-label-caps px-4 py-2 bg-primary-container text-on-primary-container rounded hover:brightness-110 transition-colors flex items-center gap-2" @onclick="LoadData">
-                <span class="material-symbols-outlined text-sm">sync</span> REFRESH
-            </button>
-        </div>
-
-        @if (DataService.ActiveScheduleSlots.Any())
-        {
-            var upcomingSlots = DataService.ActiveScheduleSlots.Where(s => s.SlotDate >= DateOnly.FromDateTime(DateTime.Today)).Take(90).ToList();
-            
-            <div class="bg-surface border border-outline-variant rounded-xl overflow-hidden">
-                @foreach (var slot in upcomingSlots)
-                {
-                    var member = DataService.Members.FirstOrDefault(m => m.Id == slot.RosterMemberId.ToString());
-                    if (member == null) continue;
-
-                    var isToday = slot.SlotDate == DateOnly.FromDateTime(DateTime.Today);
-                    var isDone = slot.IsDone;
-
-                    <div class="p-stack-md border-b border-outline-variant flex items-center gap-gutter transition-colors @(isDone ? "opacity-60 bg-surface-variant" : isToday ? "bg-surface-container-high" : "hover:bg-surface-container-low")">
-                        
-                        <!-- Date Column -->
-                        <div class="flex flex-col items-center justify-center w-16">
-                            <span class="font-label-caps text-label-caps @(isToday && !isDone ? "text-primary font-bold" : "text-outline")">@slot.SlotDate.ToString("MMM")</span>
-                            <span class="font-display-lg text-3xl @(isToday && !isDone ? "text-primary font-bold" : "text-on-surface")">@slot.SlotDate.Day</span>
-                            <span class="font-label-caps text-[10px] text-outline-variant mt-1">@slot.SlotDate.ToString("ddd").ToUpper()</span>
-                        </div>
-
-                        <div class="w-px h-12 bg-outline-variant opacity-50"></div>
-
-                        <!-- Member Avatar -->
-                        <div class="w-10 h-10 rounded-full @member.ColorClass flex items-center justify-center font-bold text-white shadow-sm shrink-0">
-                            @member.Initials
-                        </div>
-
-                        <!-- Member Details -->
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-headline-sm text-on-surface truncate">@member.Name</h3>
-                                @if (isToday)
-                                {
-                                    <span class="bg-state-warning text-white font-label-caps text-[10px] px-2 py-0.5 rounded">TODAY</span>
-                                }
-                            </div>
-                        </div>
-
-                        <!-- Actions / Status -->
-                        <div class="shrink-0 flex items-center gap-2">
-                            @if (isDone)
-                            {
-                                <span class="bg-state-healthy text-white flex items-center justify-center w-8 h-8 rounded-full">
-                                    <span class="material-symbols-outlined text-sm">check</span>
-                                </span>
-                            }
-                            else
-                            {
-                                <button class="w-8 h-8 flex items-center justify-center rounded-full border border-outline hover:border-state-healthy hover:text-state-healthy transition-colors group" @onclick="() => MarkDone(slot.Id)">
-                                    <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">check</span>
-                                </button>
-                            }
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="bg-surface-container-low p-stack-lg border border-outline-variant rounded-xl text-center">
-                <span class="material-symbols-outlined text-display-lg text-outline mb-4">event_busy</span>
-                <h3 class="font-headline-sm text-on-surface mb-2">No Schedule Found</h3>
-                <p class="text-on-surface-variant font-body-md">Configure your roster and add members to generate the 90-day cycle.</p>
-            </div>
-        }
-    </section>
+    <button class="flex items-center gap-1.5 font-label-caps text-label-caps text-primary px-3 py-2 rounded-lg bg-primary/10 active:bg-primary/20 transition-colors min-h-[44px]"
+            @onclick="LoadData">
+        <span class="material-symbols-outlined text-[16px]">sync</span>
+        REFRESH
+    </button>
 </div>
 
+@if (!DataService.ActiveScheduleSlots.Any())
+{
+    <div class="flex flex-col items-center justify-center px-8 py-16 text-center">
+        <span class="material-symbols-outlined text-6xl text-outline mb-4">event_busy</span>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">No Schedule</h3>
+        <p class="text-on-surface-variant font-body-md">Go to Roster tab, add members, and your 90-day cycle will appear here.</p>
+    </div>
+}
+else
+{
+    var upcomingSlots = DataService.ActiveScheduleSlots
+        .Where(s => s.SlotDate >= DateOnly.FromDateTime(DateTime.Today))
+        .Take(90)
+        .ToList();
+
+    <div class="divide-y divide-outline-variant">
+        @foreach (var slot in upcomingSlots)
+        {
+            var member = DataService.Members.FirstOrDefault(m => m.Id == slot.RosterMemberId.ToString());
+            if (member == null) continue;
+
+            var isToday = slot.SlotDate == DateOnly.FromDateTime(DateTime.Today);
+            var isDone = slot.IsDone;
+
+            @* Month group header tracked via component field *@
+            @if (_currentMonthMarker == null || slot.SlotDate.Month != _currentMonthMarker.Value.Month || slot.SlotDate.Year != _currentMonthMarker.Value.Year)
+            {
+                _currentMonthMarker = slot.SlotDate;
+                <div class="sticky top-0 z-10 bg-background/90 backdrop-blur-sm px-4 py-2 border-b border-outline-variant">
+                    <span class="font-label-caps text-label-caps text-outline">@slot.SlotDate.ToString("MMMM yyyy").ToUpper()</span>
+                </div>
+            }
+
+            <div class="flex items-center gap-3 px-4 py-3 transition-colors
+                        @(isDone ? "opacity-50 bg-surface-variant/20" : isToday ? "bg-primary/5 border-l-2 border-primary" : "bg-background hover:bg-surface-container-low active:bg-surface-container")">
+
+                <!-- Date block -->
+                <div class="flex flex-col items-center justify-center w-11 shrink-0">
+                    <span class="font-label-caps text-[9px] uppercase @(isToday && !isDone ? "text-primary" : "text-outline")">
+                        @slot.SlotDate.ToString("MMM")
+                    </span>
+                    <span class="font-headline-md text-2xl leading-tight @(isToday && !isDone ? "text-primary font-bold" : "text-on-surface")">
+                        @slot.SlotDate.Day
+                    </span>
+                    <span class="font-label-caps text-[9px] text-outline-variant">
+                        @slot.SlotDate.ToString("ddd").ToUpper()
+                    </span>
+                </div>
+
+                <div class="w-px h-10 bg-outline-variant opacity-40 shrink-0"></div>
+
+                <!-- Avatar -->
+                <div class="w-9 h-9 rounded-full @member.ColorClass flex items-center justify-center text-white text-sm font-bold shrink-0">
+                    @member.Initials
+                </div>
+
+                <!-- Member name + TODAY badge -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="font-headline-sm text-headline-sm text-on-surface truncate">@member.Name</span>
+                        @if (isToday && !isDone)
+                        {
+                            <span class="bg-state-warning text-white font-label-caps text-[9px] px-2 py-0.5 rounded-full shrink-0">TODAY</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Done toggle -->
+                <div class="shrink-0 ml-auto">
+                    @if (isDone)
+                    {
+                        <div class="w-9 h-9 rounded-full bg-state-healthy flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-[18px]" style="font-variation-settings: 'FILL' 1;">check</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <button class="w-9 h-9 rounded-full border-2 border-outline-variant hover:border-state-healthy active:bg-state-healthy/10 flex items-center justify-center transition-colors"
+                                @onclick="() => MarkDone(slot.Id)">
+                            <span class="material-symbols-outlined text-outline text-[18px]">check</span>
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
 @code {
+    private DateOnly? _currentMonthMarker;
+
     protected override void OnInitialized()
     {
-        DataService.OnStateChanged += StateHasChanged;
+        DataService.OnStateChanged += HandleStateChanged;
+    }
+
+    private void HandleStateChanged()
+    {
+        _currentMonthMarker = null; // reset month grouping on data refresh
+        StateHasChanged();
     }
 
     public void Dispose()
     {
-        DataService.OnStateChanged -= StateHasChanged;
+        DataService.OnStateChanged -= HandleStateChanged;
     }
 
     private void LoadData()
     {
-        // DataService generates slots implicitly during LoadDataAsync 
-        // which triggers OnStateChanged, but here we just trigger UI refresh.
+        _currentMonthMarker = null;
         StateHasChanged();
     }
 

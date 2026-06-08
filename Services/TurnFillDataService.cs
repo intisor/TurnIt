@@ -11,6 +11,7 @@ public class TurnFillDataService
     public List<Resource> Resources { get; private set; } = new();
     public List<RosterParticipant> Members { get; private set; } = new();
     public List<RosterSlot> ActiveScheduleSlots { get; private set; } = new();
+    public List<Roster> Rosters { get; private set; } = new();
     public Roster? ActiveRoster { get; private set; }
 
     public event Action? OnStateChanged;
@@ -31,7 +32,9 @@ public class TurnFillDataService
         
         // We assume there's one default roster for the MVP Space if needed
         var rosters = await _storage.GetRostersAsync(CurrentSpaceId);
-        var defaultRoster = rosters.FirstOrDefault();
+        Rosters = rosters;
+        
+        var defaultRoster = ActiveRoster ?? rosters.FirstOrDefault();
         if (defaultRoster == null)
         {
             defaultRoster = new Roster(Guid.NewGuid(), CurrentSpaceId, "Default Roster", RosterRotationType.Sequential)
@@ -39,6 +42,7 @@ public class TurnFillDataService
                 ScheduleStartDate = DateOnly.FromDateTime(DateTime.Today)
             };
             await _storage.SaveRosterAsync(defaultRoster);
+            Rosters.Add(defaultRoster);
             
             // Seed members
             var m1 = new RosterMember(Guid.NewGuid(), defaultRoster.Id, "Sarah M.");
@@ -48,8 +52,10 @@ public class TurnFillDataService
             await _storage.SaveRosterMemberAsync(m2);
             await _storage.SaveRosterMemberAsync(m3);
         }
+        
+        ActiveRoster = defaultRoster;
 
-        var rosterMembers = await _storage.GetRosterMembersAsync(defaultRoster.Id);
+        var rosterMembers = await _storage.GetRosterMembersAsync(ActiveRoster.Id);
         var activeMembers = rosterMembers.Where(m => m.IsActive).ToList();
         
         // Map members
@@ -96,11 +102,14 @@ public class TurnFillDataService
                 else
                 {
                     // Generate slots if none exist
-                    var newSlots = RosterGenerator.Generate(defaultRoster, activeMembers, 90);
-                    foreach(var slot in newSlots) await _storage.SaveRosterSlotAsync(slot);
-                    if (newSlots.Any())
+                    if (ActiveRoster != null)
                     {
-                        currentAssignee = Members.FirstOrDefault(m => m.Id == newSlots.First().RosterMemberId.ToString());
+                        var newSlots = RosterGenerator.Generate(ActiveRoster, activeMembers, 90);
+                        foreach(var slot in newSlots) await _storage.SaveRosterSlotAsync(slot);
+                        if (newSlots.Any())
+                        {
+                            currentAssignee = Members.FirstOrDefault(m => m.Id == newSlots.First().RosterMemberId.ToString());
+                        }
                     }
                 }
             }
@@ -116,10 +125,9 @@ public class TurnFillDataService
             });
         }
         
-        if (defaultRoster != null)
+        if (ActiveRoster != null)
         {
-            ActiveRoster = defaultRoster;
-            var slots = await _storage.GetRosterSlotsAsync(defaultRoster.Id);
+            var slots = await _storage.GetRosterSlotsAsync(ActiveRoster.Id);
             ActiveScheduleSlots = slots.OrderBy(s => s.SlotDate).ToList();
         }
 
@@ -181,13 +189,28 @@ public class TurnFillDataService
         await LoadDataAsync();
     }
 
+    public async Task AddRoster(Roster roster)
+    {
+        await _storage.SaveRosterAsync(roster);
+        ActiveRoster = roster;
+        await LoadDataAsync();
+    }
+
+    public async Task SetActiveRoster(Guid rosterId)
+    {
+        var roster = Rosters.FirstOrDefault(r => r.Id == rosterId);
+        if (roster != null)
+        {
+            ActiveRoster = roster;
+            await LoadDataAsync();
+        }
+    }
+
     public async Task AddMember(string name)
     {
-        var rosters = await _storage.GetRostersAsync(CurrentSpaceId);
-        var defaultRoster = rosters.FirstOrDefault();
-        if (defaultRoster != null)
+        if (ActiveRoster != null)
         {
-            var m = new RosterMember(Guid.NewGuid(), defaultRoster.Id, name)
+            var m = new RosterMember(Guid.NewGuid(), ActiveRoster.Id, name)
             {
                 IsActive = true,
                 AddedAt = DateTime.UtcNow
@@ -195,15 +218,15 @@ public class TurnFillDataService
             await _storage.SaveRosterMemberAsync(m);
             
             // Re-generate roster slots to include new member in the rotation
-            var members = await _storage.GetRosterMembersAsync(defaultRoster.Id);
+            var members = await _storage.GetRosterMembersAsync(ActiveRoster.Id);
             var activeMembers = members.Where(mem => mem.IsActive).ToList();
-            var slots = await _storage.GetRosterSlotsAsync(defaultRoster.Id);
+            var slots = await _storage.GetRosterSlotsAsync(ActiveRoster.Id);
             // Delete future incomplete slots and regenerate
             foreach(var slot in slots.Where(s => !s.IsDone))
             {
                 await _storage.DeleteRosterSlotAsync(slot.Id);
             }
-            var newSlots = RosterGenerator.Generate(defaultRoster, activeMembers, 90);
+            var newSlots = RosterGenerator.Generate(ActiveRoster, activeMembers, 90);
             foreach(var slot in newSlots) await _storage.SaveRosterSlotAsync(slot);
         }
         await LoadDataAsync();
@@ -211,11 +234,9 @@ public class TurnFillDataService
 
     public async Task MarkSlotDone(Guid slotId)
     {
-        var rosters = await _storage.GetRostersAsync(CurrentSpaceId);
-        var defaultRoster = rosters.FirstOrDefault();
-        if (defaultRoster != null)
+        if (ActiveRoster != null)
         {
-            var slots = await _storage.GetRosterSlotsAsync(defaultRoster.Id);
+            var slots = await _storage.GetRosterSlotsAsync(ActiveRoster.Id);
             var activeSlot = slots.FirstOrDefault(s => s.Id == slotId);
             if (activeSlot != null)
             {
@@ -228,11 +249,9 @@ public class TurnFillDataService
 
     public async Task UpdateRosterConfig(RosterRotationType rotationType, DateTime startDate)
     {
-        var rosters = await _storage.GetRostersAsync(CurrentSpaceId);
-        var defaultRoster = rosters.FirstOrDefault();
-        if (defaultRoster != null)
+        if (ActiveRoster != null)
         {
-            var updatedRoster = defaultRoster with { 
+            var updatedRoster = ActiveRoster with { 
                 RotationType = rotationType,
                 ScheduleStartDate = DateOnly.FromDateTime(startDate) 
             };
@@ -256,15 +275,10 @@ public class TurnFillDataService
 
     public async Task SkipMember(string memberId)
     {
-        // For MVP, skipping just means we reorder the members or mark their current slot as done.
-        // Actually, just delete the member and re-add them at the end, or skip the slot.
-        // Let's implement skipping a member by updating all their incomplete slots to IsDone = true
         var memberGuid = Guid.Parse(memberId);
-        var rosters = await _storage.GetRostersAsync(CurrentSpaceId);
-        var defaultRoster = rosters.FirstOrDefault();
-        if (defaultRoster != null)
+        if (ActiveRoster != null)
         {
-            var slots = await _storage.GetRosterSlotsAsync(defaultRoster.Id);
+            var slots = await _storage.GetRosterSlotsAsync(ActiveRoster.Id);
             var activeSlot = slots.FirstOrDefault(s => s.RosterMemberId == memberGuid && !s.IsDone);
             if (activeSlot != null)
             {
@@ -278,11 +292,9 @@ public class TurnFillDataService
     public async Task RemoveMember(string memberId)
     {
         var memberGuid = Guid.Parse(memberId);
-        var rosters = await _storage.GetRostersAsync(CurrentSpaceId);
-        var defaultRoster = rosters.FirstOrDefault();
-        if (defaultRoster != null)
+        if (ActiveRoster != null)
         {
-            var members = await _storage.GetRosterMembersAsync(defaultRoster.Id);
+            var members = await _storage.GetRosterMembersAsync(ActiveRoster.Id);
             var member = members.FirstOrDefault(m => m.Id == memberGuid);
             if (member != null)
             {
@@ -290,7 +302,7 @@ public class TurnFillDataService
                 await _storage.SaveRosterMemberAsync(updatedMember);
                 
                 // Also invalidate future slots
-                var slots = await _storage.GetRosterSlotsAsync(defaultRoster.Id);
+                var slots = await _storage.GetRosterSlotsAsync(ActiveRoster.Id);
                 foreach(var slot in slots.Where(s => !s.IsDone))
                 {
                     await _storage.DeleteRosterSlotAsync(slot.Id);
