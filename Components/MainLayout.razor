@@ -1,38 +1,102 @@
 @inherits LayoutComponentBase
+@inject NavigationManager NavManager
+@inject TurnIt.Services.TurnFillDataService DataService
+@implements IDisposable
 
-<div class="page">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">TurnFill</a>
-            <button class="navbar-toggler" type="button">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/consumables">Consumables</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/rosters">Rosters</a>
-                    </li>
-                </ul>
+<div class="flex flex-col min-h-screen bg-background text-on-background font-body-md">
+    <!-- TopAppBar -->
+    <header class="w-full top-0 sticky border-b border-outline-variant dark:border-outline-variant flex justify-between items-center px-margin-page h-16 bg-background dark:bg-background z-40 transition-colors duration-200">
+        <button aria-label="Groups" class="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-surface-variant text-primary dark:text-primary-fixed">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+        </button>
+        <h1 class="font-headline-md text-headline-md font-bold text-primary text-center">TurnFill</h1>
+        <button aria-label="Settings" class="flex items-center justify-center p-2 -mr-2 rounded-full hover:bg-surface-variant text-primary dark:text-primary-fixed" @onclick="ToggleAddNewResource">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+        </button>
+    </header>
+
+    <!-- Main Canvas -->
+    <main class="flex-1 flex flex-col gap-stack-md px-margin-page py-stack-md pb-32 overflow-y-auto">
+        @if (isReady)
+        {
+            @Body
+        }
+        else
+        {
+            <div class="flex justify-center items-center h-full">
+                <span class="font-label-caps text-outline">Loading...</span>
             </div>
-        </div>
+        }
+    </main>
+
+    <!-- BottomNavBar -->
+    <nav class="fixed bottom-0 w-full z-50 border-t border-outline-variant dark:border-outline-variant flex justify-around items-center h-20 pb-safe px-base bg-surface-container-low dark:bg-surface-dim">
+        <a href="" class="@GetNavClass("")">
+            <span class="material-symbols-outlined mb-1" style="@GetIconStyle("")">dashboard</span>
+            <span class="font-label-caps text-[10px] uppercase tracking-wide">Dashboard</span>
+        </a>
+        <a href="rosters" class="@GetNavClass("rosters")">
+            <span class="material-symbols-outlined mb-1" style="@GetIconStyle("rosters")">group</span>
+            <span class="font-label-caps text-[10px] uppercase tracking-wide">Roster</span>
+        </a>
+        <a href="history" class="@GetNavClass("history")">
+            <span class="material-symbols-outlined mb-1" style="@GetIconStyle("history")">history</span>
+            <span class="font-label-caps text-[10px] uppercase tracking-wide">History</span>
+        </a>
+        <a href="settings" class="@GetNavClass("settings")">
+            <span class="material-symbols-outlined mb-1" style="@GetIconStyle("settings")">settings</span>
+            <span class="font-label-caps text-[10px] uppercase tracking-wide">Settings</span>
+        </a>
     </nav>
 
-    <main class="container mt-4">
-        @Body
-    </main>
+    <!-- Global Overlays -->
+    <AddNewResourceOverlay @bind-IsVisible="showAddNewResource" />
 </div>
 
-<style>
-    .page {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
+@code {
+    private bool showAddNewResource = false;
+    private bool isReady = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        NavManager.LocationChanged += OnLocationChanged;
+        await DataService.InitializeAsync();
+        isReady = true;
     }
 
-    main {
-        flex: 1;
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        StateHasChanged();
     }
-</style>
+
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private void ToggleAddNewResource()
+    {
+        showAddNewResource = true;
+    }
+
+    private string GetNavClass(string href)
+    {
+        var relativePath = NavManager.ToBaseRelativePath(NavManager.Uri);
+        // Clean paths for comparison
+        relativePath = relativePath.TrimEnd('/');
+        
+        bool isActive = relativePath.Equals(href, StringComparison.OrdinalIgnoreCase);
+        
+        if (isActive)
+            return "flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform duration-100 w-20";
+        else
+            return "flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full px-4 py-1 active:scale-95 transition-transform duration-100 w-20";
+    }
+
+    private string GetIconStyle(string href)
+    {
+        var relativePath = NavManager.ToBaseRelativePath(NavManager.Uri).TrimEnd('/');
+        bool isActive = relativePath.Equals(href, StringComparison.OrdinalIgnoreCase);
+        return isActive ? "font-variation-settings: 'FILL' 1;" : "";
+    }
+}

@@ -22,6 +22,7 @@ public enum SpaceRole { Owner, Admin, Member }
 public record Consumable(Guid Id, Guid SpaceId, string Name, string Category, string UnitOfMeasure)
 {
     public int? InitialEstimateDays { get; init; }
+    public Guid? RosterId { get; init; }
     public bool IsArchived { get; init; }
     public DateTime CreatedAt { get; init; }
 }

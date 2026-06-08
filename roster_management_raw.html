@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TurnFill - Roster Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#df7412",
+                        "primary-fixed": "#d8e2ff",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-primary-container": "#00285d",
+                        "tertiary-fixed": "#ffdcc6",
+                        "primary-container": "#4d8eff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-variant": "#32353c",
+                        "on-tertiary-fixed": "#311400",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "roster-4": "#F97316",
+                        "inverse-on-surface": "#2e3038",
+                        "state-healthy": "#059669",
+                        "secondary-fixed-dim": "#4edea3",
+                        "outline-variant": "#424754",
+                        "error": "#ffb4ab",
+                        "on-error": "#690005",
+                        "state-warning": "#D97706",
+                        "secondary-fixed": "#6ffbbe",
+                        "roster-2": "#EC4899",
+                        "surface-container": "#1d2027",
+                        "surface-container-high": "#272a31",
+                        "on-primary-fixed": "#001a42",
+                        "on-background": "#e1e2ec",
+                        "on-tertiary-container": "#461f00",
+                        "on-primary-fixed-variant": "#004395",
+                        "secondary": "#4edea3",
+                        "on-secondary-container": "#00311f",
+                        "inverse-surface": "#e1e2ec",
+                        "outline": "#8c909f",
+                        "on-secondary": "#003824",
+                        "surface-dim": "#10131a",
+                        "inverse-primary": "#005ac2",
+                        "roster-3": "#06B6D4",
+                        "surface-container-lowest": "#0b0e15",
+                        "surface-container-highest": "#32353c",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#191b23",
+                        "state-urgent": "#DC2626",
+                        "on-primary": "#002e6a",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-tint": "#adc6ff",
+                        "roster-1": "#8B5CF6",
+                        "background": "#0F172A",
+                        "on-surface": "#e1e2ec",
+                        "on-secondary-fixed": "#002113",
+                        "primary": "#adc6ff",
+                        "surface-bright": "#363941",
+                        "on-error-container": "#ffdad6",
+                        "surface": "#1E293B",
+                        "secondary-container": "#00a572",
+                        "tertiary": "#ffb786",
+                        "on-tertiary": "#502400"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-page": "24px",
+                        "base": "4px",
+                        "stack-lg": "32px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "label-caps": ["JetBrains Mono"],
+                        "data-mono": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0F172A;
+            color: #e1e2ec;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md antialiased min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 bg-surface-container dark:bg-surface-container border-b border-outline-variant flex items-center justify-between px-margin-page h-16 z-50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary dark:text-primary">sync_alt</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Roster</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors duration-200">
+<span class="material-symbols-outlined text-on-surface">person_add</span>
+</button>
+</header>
+<main class="px-margin-page pt-stack-md space-y-stack-lg max-w-4xl mx-auto">
+<!-- Current Rotation Section -->
+<section aria-labelledby="rotation-title">
+<div class="flex items-center justify-between mb-stack-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface" id="rotation-title">Current Rotation</h2>
+<span class="font-label-caps text-label-caps text-outline px-2 py-1 border border-outline-variant rounded">3 PERSON CYCLE</span>
+</div>
+<!-- Visual Flow Indicator -->
+<div class="bg-surface-container-low p-stack-md border border-outline-variant rounded-xl">
+<div class="flex items-center gap-4 overflow-x-auto no-scrollbar">
+<div class="flex-shrink-0 flex items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-roster-1 flex items-center justify-center font-bold text-white shadow-sm ring-2 ring-state-healthy">S</div>
+<span class="material-symbols-outlined text-outline">arrow_forward</span>
+</div>
+<div class="flex-shrink-0 flex items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-roster-3 flex items-center justify-center font-bold text-white">M</div>
+<span class="material-symbols-outlined text-outline">arrow_forward</span>
+</div>
+<div class="flex-shrink-0 flex items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-roster-4 flex items-center justify-center font-bold text-white">Y</div>
+</div>
+</div>
+<div class="mt-stack-sm text-outline font-label-caps text-label-caps">
+                    NEXT REFILL: SARAH (IN 2 DAYS)
+                </div>
+</div>
+</section>
+<!-- User Cards List -->
+<section class="space-y-stack-sm">
+<h2 class="font-label-caps text-label-caps text-outline mb-stack-sm">MANAGE SEQUENCE</h2>
+<!-- User: Sarah -->
+<div class="bg-surface p-stack-md border border-outline-variant rounded-lg flex items-center gap-gutter transition-all hover:border-primary">
+<span class="material-symbols-outlined text-outline-variant drag-handle">drag_indicator</span>
+<div class="w-12 h-12 rounded-full bg-roster-1 flex items-center justify-center font-headline-sm text-white">S</div>
+<div class="flex-1">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Sarah</h3>
+<span class="bg-state-healthy text-white font-label-caps text-label-caps px-2 py-0.5 rounded">ON DECK</span>
+</div>
+<p class="text-on-surface-variant text-sm">Last turn: 5 days ago</p>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 border border-outline-variant text-on-surface font-label-caps text-label-caps hover:bg-surface-variant transition-colors">SKIP</button>
+<button class="w-8 h-8 flex items-center justify-center text-error hover:bg-error-container/20 rounded-full transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- User: Mike -->
+<div class="bg-surface p-stack-md border border-outline-variant rounded-lg flex items-center gap-gutter transition-all hover:border-primary">
+<span class="material-symbols-outlined text-outline-variant drag-handle">drag_indicator</span>
+<div class="w-12 h-12 rounded-full bg-roster-3 flex items-center justify-center font-headline-sm text-white">M</div>
+<div class="flex-1">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Mike</h3>
+<span class="text-outline-variant font-label-caps text-label-caps px-2 py-0.5 border border-outline-variant rounded">WAITING</span>
+</div>
+<p class="text-on-surface-variant text-sm">Position: 2nd</p>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 border border-outline-variant text-on-surface font-label-caps text-label-caps hover:bg-surface-variant transition-colors">SKIP</button>
+<button class="w-8 h-8 flex items-center justify-center text-error hover:bg-error-container/20 rounded-full transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- User: You -->
+<div class="bg-surface p-stack-md border-2 border-primary-container rounded-lg flex items-center gap-gutter transition-all">
+<span class="material-symbols-outlined text-outline-variant drag-handle">drag_indicator</span>
+<div class="w-12 h-12 rounded-full bg-roster-4 flex items-center justify-center font-headline-sm text-white">Y</div>
+<div class="flex-1">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">You</h3>
+<span class="text-outline-variant font-label-caps text-label-caps px-2 py-0.5 border border-outline-variant rounded">WAITING</span>
+</div>
+<p class="text-on-surface-variant text-sm">Position: 3rd</p>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 border border-outline-variant text-on-surface font-label-caps text-label-caps hover:bg-surface-variant transition-colors">SKIP</button>
+<button class="w-8 h-8 flex items-center justify-center text-error hover:bg-error-container/20 rounded-full transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Group Settings Section -->
+<section class="bg-surface-container p-stack-md border border-outline-variant rounded-xl">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Global Rules</h2>
+<div class="space-y-stack-sm">
+<label class="flex items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors cursor-pointer">
+<span class="font-body-md">Auto-skip if away</span>
+<input checked="" class="w-10 h-5 rounded-full bg-surface-variant border-none text-primary focus:ring-primary" type="checkbox"/>
+</label>
+<div class="h-px bg-outline-variant mx-stack-sm"></div>
+<label class="flex items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors cursor-pointer">
+<span class="font-body-md">Notification before turn</span>
+<input class="w-10 h-5 rounded-full bg-surface-variant border-none text-primary focus:ring-primary" type="checkbox"/>
+</label>
+<div class="h-px bg-outline-variant mx-stack-sm"></div>
+<button class="w-full flex items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors">
+<span class="font-body-md">Rotation Logic</span>
+<div class="flex items-center gap-2">
+<span class="text-outline text-sm">FIFO Sequential</span>
+<span class="material-symbols-outlined text-outline">chevron_right</span>
+</div>
+</button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-container-low dark:bg-surface-container-low border-t border-outline-variant flex justify-around items-center h-20 px-base pb-safe">
+<!-- Roster (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-label-caps text-label-caps">Roster</span>
+</a>
+<!-- Schedule -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-caps text-label-caps">Schedule</span>
+</a>
+<!-- History -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-caps text-label-caps">History</span>
+</a>
+<!-- Settings -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for Drag and Drop Visual Feedback
+        const cards = document.querySelectorAll('.drag-handle');
+        cards.forEach(handle => {
+            handle.addEventListener('mousedown', () => {
+                handle.parentElement.classList.add('scale-[1.02]', 'bg-surface-variant', 'border-primary');
+            });
+            handle.addEventListener('mouseup', () => {
+                handle.parentElement.classList.remove('scale-[1.02]', 'bg-surface-variant', 'border-primary');
+            });
+        });
+
+        // Simple button active state visual
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.addEventListener('mousedown', () => btn.classList.add('scale-95'));
+            btn.addEventListener('mouseup', () => btn.classList.remove('scale-95'));
+        });
+    </script>
+</body></html>

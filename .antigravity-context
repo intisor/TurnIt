@@ -10,47 +10,58 @@
 ## Core Pillars & Logic
 
 ### 1. Depletion Forecasting Algorithm
-Located in [Core.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Algorithms/Core.cs):
+Located in [Core.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Algorithms/Core.cs):
 - **0 Refills**: Returns prediction based on the user's `InitialEstimateDays` (defaulting to 30 days) relative to today.
 - **1 Refill**: Returns prediction based on `InitialEstimateDays` relative to the first refill date.
 - **2+ Refills**: Computes actual durations between subsequent refills, applies a recency-biased weighted average over the last 3 durations, dampens outliers (durations > 2x average are weighted at 0.25x), and projects forward from the last refill date.
 
 ### 2. Roster Schedule Generator
-Located in [Core.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Algorithms/Core.cs):
+Located in [Core.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Algorithms/Core.cs):
 - **Sequential**: Cycles members `A -> B -> C -> A -> B...` daily, starting from a designated member index or the first active member.
-- **Weekly Pattern**: Assigns duties to members based on designated available days of the week (stored in comma-separated integers mapping to `DayOfWeek`).
-- **Custom**: Planned for Phase 2 pattern definitions.
+- **Weekly Pattern**: Assigns duties to members based on designated available days of the week.
+
+### 3. Decoupling of Pillars
+- **Roster & Consumables Separation**: The Roster engine is decoupled from the Consumables depletion tracking visualizer on the UI level (no automatic roster tracking linked during the creation or view of a consumable resource for now, satisfying user UI request).
+
+---
+
+## UI Architecture & Recent Overhaul
+
+We recently discarded the legacy Bootstrap/CSS architecture in favor of a modern, pure Tailwind CSS setup. The UI was designed using **Stitch by Google** (Project ID: 3697614804123319091) and carefully extracted into Blazor.
+
+**Tech Stack**: Blazor WASM (.NET 10), Tailwind CSS (via CDN), Google Fonts (Inter, Hanken Grotesk, JetBrains Mono), and Material Symbols.
+
+### State Management
+- **`TurnFillDataService.cs`**: An in-memory scoped service providing mock `Resource` and `RosterParticipant` data to simulate real-time UI interactions without a backend. 
+
+### Key Screens & Components
+- **`Index.razor` (Dashboard)**: Dynamic bento-grid dashboard showing resource health bars.
+- **`ResourceDetail.razor`**: Detailed view displaying depletion line charts (SVG) and roster sequences.
+- **`RosterManagement.razor`**: Drag-and-drop styled roster manager and rotation visualizer.
+- **`MainLayout.razor`**: Fixed top/bottom app bars with dynamic routing highlighting.
+- **`AddNewResourceOverlay.razor`**: A right-side slide-over modal for creating new resources.
+- **`RefillActionOverlay.razor`**: A bottom-sheet modal to confirm refills and advance rosters.
 
 ---
 
 ## Directory & File Reference
 
-- [Domain Models](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Models/Domain.cs): Immutable records for all data structures (`User`, `Space`, `Consumable`, `RefillEvent`, `Roster`, `RosterMember`, `RosterSlot`, `SwapRequest`).
-- [Algorithms Core](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Algorithms/Core.cs): Prediction and schedule generation logic (`DepletionForecast`, `RosterGenerator`).
-- **Pages**:
-  - [Index.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Pages/Index.razor): Home dashboard.
-  - [Consumables.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Pages/Consumables.razor): List and CRUD operations for consumables.
-  - [Rosters.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Pages/Rosters.razor): List and CRUD operations for rosters.
-- **Components & Layout**:
-  - [MainLayout.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/src/Components/MainLayout.razor): Shared nav menu and layout.
-- **Documentation**:
-  - [README.md](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/README.md): Fast startup reference.
-  - [REFYLA_PRD.md](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/REFYLA_PRD.md) / [Refyla_PRD_v1.0.md](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Refyla_PRD_v1.0.md): Product requirements.
-  - [QUICK_REFERENCE.md](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/QUICK_REFERENCE.md): Algorithm spec sheet.
+- [Domain Models](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Models/Domain.cs): Immutable records for core data structures (`User`, `Space`, `Consumable`, `RefillEvent`, `Roster`, `RosterMember`, etc).
+- [UI Models](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Models/): `Resource.cs`, `RosterParticipant.cs`.
+- [Algorithms Core](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Algorithms/Core.cs): Prediction and schedule generation logic.
+- [Data Service](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Services/TurnFillDataService.cs): In-memory mock state.
 
 ---
 
 ## Development & Testing Instructions
 
 - **Mandatory User Rule**: If converting or working with `.docx` specifications, you **MUST** run `npx mammoth` to convert the `.docx` to markdown first before analyzing or writing code.
-- **Tech Stack**: Blazor WASM (.NET 9), bootstrap.css, and standard C#.
-- **Testing**:
-  Algorithms are pure static functions. To test, create a separate xUnit test project `TurnIt.Tests` referencing the main project, and run `dotnet test`.
+- **Design Philosophy**: Use pure colors (no gradients) that convey psychology and state (Healthy/Warning/Urgent). The app must behave like an SPA with minimal cascading modals; use slide-overs and bottom sheets for actions.
+- **Testing**: Algorithms are pure static functions. To test, create a separate xUnit test project `TurnIt.Tests` referencing the main project, and run `dotnet test`.
 
 ---
 
 ## Active Roadmap Checklist
-- [ ] Implement `StorageService` for local storage persistence.
-- [ ] Detail view for `Consumables` with refill logging and prediction alerts.
-- [ ] Detail view for `Rosters` displaying generated schedules.
-- [ ] Phase 1 MVP features (VAPID push notifications, iCal export).
+- [ ] Connect `TurnFillDataService` to actual `StorageService` for local browser persistence.
+- [ ] Map frontend `Resource` and `RosterParticipant` models to the backend `Consumable` and `RosterMember` Domain records.
+- [ ] Implement Phase 1 MVP features (VAPID push notifications, iCal export).
