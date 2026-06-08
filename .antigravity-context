@@ -7,6 +7,17 @@
 
 ---
 
+## Tech Stack
+
+- **Framework**: Blazor WebAssembly on **.NET 10**
+- **Styling**: **Tailwind CSS** (via CDN) — all Bootstrap removed
+- **Fonts**: Google Fonts — Inter (body), Hanken Grotesk (headlines), JetBrains Mono (labels/mono)
+- **Icons**: Material Symbols Outlined
+- **Design System**: Stitch (Google) — exported into Blazor; no gradients, pure flat colors only
+- **Persistence**: IndexedDB via `StorageService.cs` (Blazor JS Interop)
+
+---
+
 ## Core Pillars & Logic
 
 ### 1. Depletion Forecasting Algorithm
@@ -17,51 +28,121 @@ Located in [Core.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Algorith
 
 ### 2. Roster Schedule Generator
 Located in [Core.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Algorithms/Core.cs):
-- **Sequential**: Cycles members `A -> B -> C -> A -> B...` daily, starting from a designated member index or the first active member.
-- **Weekly Pattern**: Assigns duties to members based on designated available days of the week.
+- **Sequential**: Cycles members `A -> B -> C -> A -> B...` daily for 90 days.
+- **Weekly Pattern**: Assigns duties based on designated available days of the week.
+- Generates 90-day slots stored in IndexedDB and fetched by `TurnFillDataService`.
 
-### 3. Decoupling of Pillars
-- **Roster & Consumables Separation**: The Roster engine is decoupled from the Consumables depletion tracking visualizer on the UI level (no automatic roster tracking linked during the creation or view of a consumable resource for now, satisfying user UI request).
+### 3. Pillars are Decoupled
+- Rosters and Consumables are separate concepts on both the UI and data model levels.
+- A consumable does **not** automatically require a linked roster.
 
 ---
 
-## UI Architecture & Recent Overhaul
+## State Management — `TurnFillDataService.cs`
 
-We recently discarded the legacy Bootstrap/CSS architecture in favor of a modern, pure Tailwind CSS setup. The UI was designed using **Stitch by Google** (Project ID: 3697614804123319091) and carefully extracted into Blazor.
+**File**: [TurnFillDataService.cs](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Services/TurnFillDataService.cs)
 
-**Tech Stack**: Blazor WASM (.NET 10), Tailwind CSS (via CDN), Google Fonts (Inter, Hanken Grotesk, JetBrains Mono), and Material Symbols.
+Acts as the single source of truth for all UI state. Bridges `StorageService` (persistence) and the UI.
 
-### State Management
-- **`TurnFillDataService.cs`**: An in-memory scoped service providing mock `Resource` and `RosterParticipant` data to simulate real-time UI interactions without a backend. 
+### Key Exposed Properties
+| Property | Type | Purpose |
+|---|---|---|
+| `Resources` | `List<Resource>` | UI view of consumables with level, state, and assignee |
+| `Members` | `List<RosterParticipant>` | Active roster members mapped from domain `RosterMember` |
+| `Rosters` | `List<Roster>` | All rosters in the current space |
+| `ActiveRoster` | `Roster?` | Currently selected roster |
+| `ActiveScheduleSlots` | `List<RosterSlot>` | 90-day upcoming schedule slots |
+
+### Key Methods
+- `InitializeAsync()` / `LoadDataAsync()` — load from IndexedDB, generate slots if needed
+- `AddResource(Resource)` — create new consumable + optional initial refill
+- `RefillResource(id, date, qty, cost, notes)` — log refill, advance roster slot
+- `AddRoster(Roster)` / `SetActiveRoster(Guid)` — multi-roster support
+- `AddMember(name)` / `RemoveMember(id)` / `SkipMember(id)` — roster member management
+- `UpdateRosterConfig(rotationType, startDate)` — apply config and regenerate slots
+
+---
+
+## UI Architecture — Mobile-First (Complete Rebuild June 2026)
+
+All screens are designed **mobile-first (360px baseline)** scaling up with `sm:` breakpoints.
+
+### Layout Rules
+- Header: `h-14` (56px), sticky, `z-40`
+- Bottom nav: `h-16` with `padding-bottom: env(safe-area-inset-bottom)` for notch safety
+- Main content: `padding-bottom: calc(4rem + env(safe-area-inset-bottom))` so last card clears the nav
+- Touch targets: minimum `min-h-[48px]` / `min-h-[44px]` on all interactive elements
+- All overlays are bottom-sheets or full-width right slide-overs — never centered modals
+- No `max-w` caps on mobile — everything is edge-to-edge
 
 ### Key Screens & Components
-- **`Index.razor` (Dashboard)**: Dynamic bento-grid dashboard showing resource health bars.
-- **`ResourceDetail.razor`**: Detailed view displaying depletion line charts (SVG) and roster sequences.
-- **`RosterManagement.razor`**: Drag-and-drop styled roster manager and rotation visualizer.
-- **`MainLayout.razor`**: Fixed top/bottom app bars with dynamic routing highlighting.
-- **`AddNewResourceOverlay.razor`**: A right-side slide-over modal for creating new resources.
-- **`RefillActionOverlay.razor`**: A bottom-sheet modal to confirm refills and advance rosters.
+
+| File | Route | Purpose |
+|---|---|---|
+| [Index.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Pages/Index.razor) | `/` | Dashboard — full-width resource cards with level bars, state badges, assignee chip |
+| [RosterManagement.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Pages/RosterManagement.razor) | `/rosters` | Roster list, rotation flow, member management, settings |
+| [Schedule.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Pages/Schedule.razor) | `/schedule` | 90-day calendar view with month group headers, done toggle |
+| [Consumables.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Pages/Consumables.razor) | `/consumables` | Full Tailwind/Stitch redesign — depletion bars, bottom-sheet refill log, state badges |
+| [MainLayout.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Components/MainLayout.razor) | Layout | 56px header, safe-area bottom nav, global overlay wiring |
+| [CreateMenuOverlay.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Components/CreateMenuOverlay.razor) | Overlay | Bottom-sheet: choose Consumable vs Roster creation |
+| [AddNewConsumableOverlay.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Components/AddNewConsumableOverlay.razor) | Overlay | Full-width right slide-over for creating consumables |
+| [AddNewRosterOverlay.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Components/AddNewRosterOverlay.razor) | Overlay | Full-width right slide-over for creating rosters |
+| [RefillActionOverlay.razor](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Components/RefillActionOverlay.razor) | Overlay | Bottom-sheet confirm refill with date, qty, cost, notes |
+
+### Creation Flow
+`+ button (MainLayout)` → `CreateMenuOverlay` (bottom-sheet choice) → either:
+- `AddNewConsumableOverlay` (full-width slide-over, creates Consumable)
+- `AddNewRosterOverlay` (full-width slide-over, creates Roster, navigates to `/rosters`)
 
 ---
 
 ## Directory & File Reference
 
-- [Domain Models](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Models/Domain.cs): Immutable records for core data structures (`User`, `Space`, `Consumable`, `RefillEvent`, `Roster`, `RosterMember`, etc).
-- [UI Models](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Models/): `Resource.cs`, `RosterParticipant.cs`.
-- [Algorithms Core](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Algorithms/Core.cs): Prediction and schedule generation logic.
-- [Data Service](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Services/TurnFillDataService.cs): In-memory mock state.
+- [Domain Models](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Models/Domain.cs) — Immutable records: `User`, `Space`, `Consumable`, `RefillEvent`, `Roster`, `RosterMember`, `RosterSlot`, `RosterRotationType`
+- [UI Models](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Models/) — `Resource.cs`, `RosterParticipant.cs` (view-layer adapters)
+- [Algorithms Core](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Algorithms/Core.cs) — `DepletionForecaster.PredictForecast()` + `RosterGenerator.Generate()`
+- [Data Service](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Services/TurnFillDataService.cs) — Primary state orchestrator
+- [Storage Service](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/Services/StorageService.cs) — IndexedDB persistence layer
+- [app.css](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/wwwroot/app.css) — Safe-area CSS vars, slide-up/right animations, scrollbar hide
+- [index.html](file:///c:/Users/DELL/Desktop/Coded/intisor/TurnIt/wwwroot/index.html) — PWA metas, viewport-fit=cover, Tailwind config, all design tokens
 
 ---
 
-## Development & Testing Instructions
+## Design Tokens (Tailwind Config in index.html)
 
-- **Mandatory User Rule**: If converting or working with `.docx` specifications, you **MUST** run `npx mammoth` to convert the `.docx` to markdown first before analyzing or writing code.
-- **Design Philosophy**: Use pure colors (no gradients) that convey psychology and state (Healthy/Warning/Urgent). The app must behave like an SPA with minimal cascading modals; use slide-overs and bottom sheets for actions.
-- **Testing**: Algorithms are pure static functions. To test, create a separate xUnit test project `TurnIt.Tests` referencing the main project, and run `dotnet test`.
+- **Background**: `#0F172A` (deep slate)
+- **Surface**: `#1E293B` | Surface Container: `#1d2027` | Surface Bright: `#363941`
+- **Primary**: `#adc6ff` (soft blue) | Primary Container: `#4d8eff`
+- **States**: Healthy `#059669` | Warning `#D97706` | Urgent `#DC2626`
+- **Roster Colors**: `roster-1` #8B5CF6 | `roster-2` #EC4899 | `roster-3` #06B6D4 | `roster-4` #F97316 | `roster-5` #10B981
+- **Spacing**: `margin-page: 16px` | `stack-lg: 24px` | `stack-md: 16px` | `gutter: 12px`
+- **Border Radius**: Default `0.25rem`, `xl: 0.75rem`, `2xl: 1rem`, `full: 9999px`
+
+---
+
+## Development Rules
+
+- **Docx Rule**: If working with `.docx` specs, run `npx mammoth` to convert to markdown first.
+- **No gradients** — pure solid colors only (design philosophy).
+- **Stitch design tokens** must be used (`bg-surface`, `text-on-surface`, `bg-primary`, etc.) — never hardcode hex in components.
+- **Bootstrap is removed** — all UI must use Tailwind/Stitch utility classes.
+- **Mobile-first always** — default is single-column full-width, use `sm:` to scale up.
+- **Touch targets**: All buttons and interactive elements must be `min-h-[44px]` or `min-h-[48px]`.
+- **Testing**: Algorithms are pure static functions. Test with xUnit in `TurnIt.Tests` project.
 
 ---
 
 ## Active Roadmap Checklist
-- [ ] Connect `TurnFillDataService` to actual `StorageService` for local browser persistence.
-- [ ] Map frontend `Resource` and `RosterParticipant` models to the backend `Consumable` and `RosterMember` Domain records.
-- [ ] Implement Phase 1 MVP features (VAPID push notifications, iCal export).
+
+- [x] Upgraded to .NET 10
+- [x] Full Tailwind/Stitch design system (Bootstrap removed)
+- [x] Mobile-first rebuild — all pages and components
+- [x] IndexedDB persistence via StorageService
+- [x] 90-day roster schedule generation
+- [x] Multi-roster support (create, select active roster)
+- [x] Separate creation UI for Rosters vs Consumables
+- [x] Detailed refill logging (date, quantity, cost, notes)
+- [ ] Resource detail page with depletion chart
+- [ ] Push notifications (VAPID)
+- [ ] iCal export of roster schedule
+- [ ] Settings page (user profile, space management)
