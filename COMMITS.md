@@ -67,10 +67,24 @@ All commits have been recorded under your account (`intisor`) and pushed to the 
     - Removed incorrect `IsReminder` abstraction
     - Updated `.antigravity-context` with .NET 10 status and decoupling details
 
+### Feature Restoration
+15. **7590391** - feat: restore 90-day schedule calendar view
+    - Added `Pages/Schedule.razor` to match the Stitch design.
+    - Updated `MainLayout.razor` to replace the History tab with Schedule.
+
+16. **c62ea7c** - feat: restore detailed refill logging (date, quantity, cost, notes)
+    - Expanded `RefillActionOverlay.razor` with full input fields.
+
+17. **daf3e09** - feat: restore roster configurations (rotation logic, start date)
+    - Added config dropdowns to `RosterManagement.razor`.
+
+18. **f2e541c** - refactor: update data service to support restored features
+    - Updated `TurnFillDataService.cs` to generate 90-day slots and accept configuration parameters.
+
 ## Statistics
 
-- **Total commits**: 14
-- **Files created**: 23
+- **Total commits**: 18
+- **Files created**: 24
 - **Lines of code**: ~1,700+
 - **Languages**: C#, Razor, HTML, CSS, Markdown
 - **Author**: intisor (abdulawwalintisor777@gmail.com)
