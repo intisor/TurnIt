@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Resource Detail - Whole Milk</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#1d2027",
+                    "primary-container": "#4d8eff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-primary-container": "#00285d",
+                    "roster-3": "#06B6D4",
+                    "state-warning": "#D97706",
+                    "on-tertiary": "#502400",
+                    "secondary-fixed": "#6ffbbe",
+                    "outline": "#8c909f",
+                    "tertiary-fixed": "#ffdcc6",
+                    "surface-container-high": "#272a31",
+                    "tertiary-container": "#df7412",
+                    "on-background": "#e1e2ec",
+                    "on-primary-fixed": "#001a42",
+                    "surface-container-lowest": "#0b0e15",
+                    "state-healthy": "#059669",
+                    "on-primary-fixed-variant": "#004395",
+                    "surface-container-low": "#191b23",
+                    "on-secondary-container": "#00311f",
+                    "surface-container-highest": "#32353c",
+                    "surface-variant": "#32353c",
+                    "tertiary": "#ffb786",
+                    "primary-fixed-dim": "#adc6ff",
+                    "primary-fixed": "#d8e2ff",
+                    "on-secondary-fixed-variant": "#005236",
+                    "error": "#ffb4ab",
+                    "state-urgent": "#DC2626",
+                    "on-tertiary-fixed": "#311400",
+                    "secondary-container": "#00a572",
+                    "roster-4": "#F97316",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "roster-1": "#8B5CF6",
+                    "on-surface-variant": "#c2c6d6",
+                    "surface": "#1E293B",
+                    "secondary": "#4edea3",
+                    "on-error-container": "#ffdad6",
+                    "roster-2": "#EC4899",
+                    "on-error": "#690005",
+                    "on-tertiary-container": "#461f00",
+                    "inverse-surface": "#e1e2ec",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "background": "#0F172A",
+                    "error-container": "#93000a",
+                    "primary": "#adc6ff",
+                    "on-surface": "#e1e2ec",
+                    "outline-variant": "#424754",
+                    "surface-bright": "#363941",
+                    "on-primary": "#002e6a",
+                    "inverse-on-surface": "#2e3038",
+                    "on-secondary": "#003824",
+                    "on-secondary-fixed": "#002113",
+                    "inverse-primary": "#005ac2",
+                    "surface-dim": "#10131a",
+                    "surface-tint": "#adc6ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-md": "16px",
+                    "gutter": "16px",
+                    "base": "4px",
+                    "stack-lg": "32px",
+                    "margin-page": "24px",
+                    "stack-sm": "8px"
+            },
+            "fontFamily": {
+                    "label-caps": ["JetBrains Mono"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "data-mono": ["JetBrains Mono"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0F172A;
+            color: #e1e2ec;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .flat-chart-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 2s ease-in-out forwards;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+        .status-header-bg {
+            background-color: #00285d; /* Oceanic Blue */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- Top Navigation Anchor -->
+<header class="w-full sticky top-0 z-50 bg-surface-container border-b border-outline-variant flex items-center justify-between px-margin-page h-16 transition-colors duration-200">
+<div class="flex items-center gap-stack-sm">
+<button class="w-10 h-10 flex items-center justify-center hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">TurnFill</h1>
+</div>
+<div class="flex items-center gap-stack-md">
+<span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 cursor-pointer transition-colors">sync_alt</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 cursor-pointer transition-colors">more_vert</span>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-margin-page py-stack-lg flex flex-col gap-stack-lg">
+<!-- Large Resource Header -->
+<section class="status-header-bg border-2 border-primary-container p-stack-lg rounded-none flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+<div class="space-y-base">
+<span class="font-label-caps text-label-caps text-primary-fixed uppercase tracking-widest">Resource Focus</span>
+<h2 class="font-display-lg text-display-lg text-white">Whole Milk</h2>
+<div class="flex items-center gap-stack-sm text-state-healthy">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-headline-sm text-headline-sm">80% Healthy</span>
+</div>
+</div>
+<div class="flex flex-col items-start md:items-end gap-stack-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Last Refilled: 2 Days Ago</span>
+<button class="bg-primary-container text-on-primary-container font-label-caps text-label-caps px-stack-lg py-stack-sm font-bold border-2 border-transparent active:scale-95 transition-transform">
+                    REFILL NOW
+                </button>
+</div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
+<!-- Usage Analytics (Depletion Line Chart) -->
+<div class="md:col-span-7 bg-surface p-stack-lg border border-outline-variant">
+<div class="flex justify-between items-center mb-stack-lg">
+<h3 class="font-headline-sm text-headline-sm">Depletion Analysis</h3>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Last 7 Days</span>
+</div>
+<div class="h-48 w-full relative">
+<svg class="w-full h-full overflow-visible" viewbox="0 0 700 200">
+<!-- Grid Lines -->
+<line stroke="#424754" stroke-width="1" x1="0" x2="700" y1="0" y2="0"></line>
+<line stroke="#424754" stroke-width="1" x1="0" x2="700" y1="100" y2="100"></line>
+<line stroke="#424754" stroke-width="2" x1="0" x2="700" y1="200" y2="200"></line>
+<!-- Depletion Path -->
+<path class="flat-chart-line" d="M0,20 L100,45 L200,80 L300,120 L400,110 L500,150 L600,180 L700,200" fill="none" stroke="#4d8eff" stroke-width="4"></path>
+<!-- Data Points -->
+<circle cx="0" cy="20" fill="#adc6ff" r="4"></circle>
+<circle cx="700" cy="200" fill="#DC2626" r="4"></circle>
+</svg>
+<div class="flex justify-between mt-stack-sm font-data-mono text-data-mono text-on-surface-variant">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+<div class="mt-stack-lg p-stack-md bg-surface-container-low border-l-4 border-state-warning">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-bold text-state-warning">Insight:</span> High consumption spike detected on Thursday. Predicted empty in <span class="font-data-mono font-bold">48 hours</span>.
+                    </p>
+</div>
+</div>
+<!-- Roster Engine -->
+<div class="md:col-span-5 bg-surface p-stack-lg border border-outline-variant">
+<h3 class="font-headline-sm text-headline-sm mb-stack-lg">Roster Engine</h3>
+<div class="relative space-y-stack-lg before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant">
+<!-- Current User -->
+<div class="relative pl-12">
+<div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-roster-1 border-2 border-white flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-[18px] text-white" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<div class="flex flex-col gap-base">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-roster-1">Sarah</h4>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Current Turn</span>
+</div>
+<div class="flex gap-base">
+<button class="bg-surface-variant p-2 hover:bg-outline-variant transition-colors" title="Swap">
+<span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+</button>
+<button class="bg-surface-variant p-2 hover:bg-outline-variant transition-colors" title="Skip">
+<span class="material-symbols-outlined text-[20px]">redo</span>
+</button>
+</div>
+</div>
+<div class="bg-surface-container-highest px-stack-sm py-base inline-block">
+<span class="font-data-mono text-data-mono text-primary">Due: Refill Needed</span>
+</div>
+</div>
+</div>
+<!-- Next User -->
+<div class="relative pl-12 opacity-80">
+<div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-roster-2 border-2 border-outline flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-[18px] text-white">person</span>
+</div>
+<div class="flex flex-col gap-base">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-roster-2">Mike</h4>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Next</span>
+</div>
+<div class="flex gap-base">
+<button class="bg-surface-variant p-2 hover:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+</button>
+<button class="bg-surface-variant p-2 hover:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">redo</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Following (You) -->
+<div class="relative pl-12 opacity-60">
+<div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-roster-3 border-2 border-outline flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-[18px] text-white">person</span>
+</div>
+<div class="flex flex-col gap-base">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-roster-3">You</h4>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Following</span>
+</div>
+<div class="flex gap-base">
+<button class="bg-surface-variant p-2 hover:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+</button>
+<button class="bg-surface-variant p-2 hover:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">redo</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-stack-lg py-stack-md border-2 border-dashed border-outline-variant hover:border-primary-container hover:bg-surface-container transition-all flex items-center justify-center gap-stack-sm">
+<span class="material-symbols-outlined">person_add</span>
+<span class="font-label-caps text-label-caps">Add Participant</span>
+</button>
+</div>
+<!-- History Summary -->
+<div class="md:col-span-12 bg-surface-container-low p-stack-lg border border-outline-variant">
+<div class="flex items-center gap-stack-md mb-stack-md">
+<span class="material-symbols-outlined text-primary">history</span>
+<h3 class="font-headline-sm text-headline-sm">Activity History</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-data-mono text-data-mono">
+<thead class="border-b border-outline-variant text-on-surface-variant uppercase text-xs tracking-widest">
+<tr>
+<th class="py-stack-sm px-stack-md">Date</th>
+<th class="py-stack-sm px-stack-md">User</th>
+<th class="py-stack-sm px-stack-md">Action</th>
+<th class="py-stack-sm px-stack-md">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr>
+<td class="py-stack-md px-stack-md">Oct 24, 08:42</td>
+<td class="py-stack-md px-stack-md">Mike</td>
+<td class="py-stack-md px-stack-md">Manual Refill</td>
+<td class="py-stack-md px-stack-md text-state-healthy">Completed</td>
+</tr>
+<tr>
+<td class="py-stack-md px-stack-md">Oct 21, 17:15</td>
+<td class="py-stack-md px-stack-md">Sarah</td>
+<td class="py-stack-md px-stack-md">Auto-Alert Triggered</td>
+<td class="py-stack-md px-stack-md text-state-warning">Warning</td>
+</tr>
+<tr>
+<td class="py-stack-md px-stack-md">Oct 20, 09:00</td>
+<td class="py-stack-md px-stack-md">You</td>
+<td class="py-stack-md px-stack-md">Manual Refill</td>
+<td class="py-stack-md px-stack-md text-state-healthy">Completed</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-container-low border-t border-outline-variant flex justify-around items-center h-20 px-base pb-safe transition-transform">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-caps text-label-caps">Roster</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-caps text-label-caps">Schedule</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-caps text-label-caps">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+<!-- Spacer for Bottom Nav -->
+<div class="h-24"></div>
+<script>
+        // Simple micro-interaction for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.add('scale-95');
+                setTimeout(() => this.classList.remove('scale-95'), 100);
+            });
+        });
+
+        // Simulating interactive "Swap" effect
+        function simulateSwap() {
+            const rosterContainer = document.querySelector('.space-y-stack-lg');
+            const items = Array.from(rosterContainer.children);
+            if (items.length > 1) {
+                rosterContainer.appendChild(items[0]);
+            }
+        }
+    </script>
+</body></html>

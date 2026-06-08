@@ -1,0 +1,133 @@
+@if (IsVisible)
+{
+    <!-- Background Content (Dimmed Dashboard) -->
+    <div class="fixed inset-0 grid grid-cols-4 gap-gutter p-margin-page opacity-30 pointer-events-none">
+        <div class="bg-surface h-48 border border-outline-variant rounded"></div>
+        <div class="bg-surface h-48 border border-outline-variant rounded"></div>
+        <div class="bg-surface h-48 border border-outline-variant rounded"></div>
+        <div class="bg-surface h-48 border border-outline-variant rounded"></div>
+        <div class="bg-surface h-48 border border-outline-variant rounded"></div>
+        <div class="bg-surface h-48 border border-outline-variant rounded"></div>
+    </div>
+    
+    <!-- Overlay / Backdrop -->
+    <div class="fixed inset-0 bg-surface-container-lowest/60 backdrop-blur-[2px] z-40" @onclick="Close"></div>
+    
+    <!-- Slide-over Panel -->
+    <div class="fixed inset-y-0 right-0 w-[90%] bg-surface-bright z-50 flex flex-col slide-over-enter slide-over-active">
+        <!-- Header Section -->
+        <header class="h-20 flex items-center justify-between px-margin-page border-b border-outline-variant bg-surface-bright">
+            <div class="flex items-center gap-4">
+                <button class="w-10 h-10 flex items-center justify-center hover:bg-surface-variant transition-colors rounded" @onclick="Close">
+                    <span class="material-symbols-outlined text-on-surface">close</span>
+                </button>
+                <h1 class="font-headline-md text-headline-md text-on-surface">New Resource</h1>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary rounded-full">
+                <span class="material-symbols-outlined text-primary text-[18px]">info</span>
+                <span class="font-label-caps text-label-caps text-primary">DRAFT MODE</span>
+            </div>
+        </header>
+        
+        <!-- Form Content Area -->
+        <main class="flex-1 overflow-y-auto p-margin-page space-y-stack-lg">
+            <section class="max-w-2xl">
+                <p class="text-on-surface-variant mb-stack-lg font-body-lg text-body-lg">
+                    Define the parameters for your new operational resource. Changes take effect immediately across all active rosters.
+                </p>
+                <div class="grid grid-cols-1 gap-stack-lg">
+                    <!-- Resource Name Field -->
+                    <div class="space-y-base">
+                        <label class="font-label-caps text-label-caps text-on-surface-variant" for="res_name">RESOURCE NAME</label>
+                        <input class="w-full bg-surface text-on-surface border border-outline-variant px-4 py-3 font-body-md text-body-md focus:border-primary focus:ring-0 rounded-none transition-all" id="res_name" placeholder="e.g. Server Node Alpha" type="text" @bind="newResource.Name" @bind:event="oninput" />
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-lg">
+                        <!-- Current Level Field -->
+                        <div class="space-y-base">
+                            <label class="font-label-caps text-label-caps text-on-surface-variant" for="res_level">CURRENT LEVEL (%)</label>
+                            <div class="relative">
+                                <input class="w-full bg-surface text-on-surface border border-outline-variant px-4 py-3 font-body-md text-body-md focus:border-primary focus:ring-0 rounded-none transition-all" id="res_level" max="100" min="0" placeholder="100" type="number" @bind="newResource.CurrentLevelPercentage" @bind:event="oninput" />
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 font-data-mono text-data-mono text-outline">PCT</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Initial Estimate (Days) Field -->
+                        <div class="space-y-base">
+                            <label class="font-label-caps text-label-caps text-on-surface-variant" for="res_estimate">ESTIMATED DURATION (DAYS)</label>
+                            <div class="relative">
+                                <input class="w-full bg-surface text-on-surface border border-outline-variant px-4 py-3 font-body-md text-body-md focus:border-primary focus:ring-0 rounded-none transition-all" id="res_estimate" min="1" placeholder="30" type="number" @bind="newResource.InitialEstimateDays" @bind:event="oninput" />
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 font-data-mono text-data-mono text-outline">DAYS</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @* Roster assignment removed for now *@
+                    <!-- Visual Placeholder Card -->
+                    <div class="p-stack-md bg-surface-container rounded border border-outline-variant mt-stack-lg">
+                        <div class="flex items-center justify-between mb-stack-sm">
+                            <span class="font-label-caps text-label-caps text-outline">PREVIEW INDICATOR</span>
+                            <span class="font-data-mono text-data-mono @newResource.StateTextColorClass">STATUS: @newResource.State.ToString().ToUpper()</span>
+                        </div>
+                        <div class="h-8 bg-surface-container-lowest relative overflow-hidden">
+                            <div class="h-full @newResource.StateColorClass transition-all duration-500" style="width: @(newResource.CurrentLevelPercentage)%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Atmospheric Visual for Professional Polish -->
+            <div class="relative w-full h-64 mt-stack-lg overflow-hidden border border-outline-variant">
+                <img class="w-full h-full object-cover grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700 cursor-crosshair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCerHbzqn5_Kc29KXT7M8OguAHXmKeV8-9oAzqv4ocbbYSnLu0ZMJ7vlpZAxsnCR8PJjAXj2w50J3GOPbDlNiMcOmj3VuGDY5ps2qhzow8QjtpRISFJB2dQjw2eQFlJ-rLs39J7Ady5cOUDfMYxB0JvdVKn8AOlHdb-9HtSjOvym41PGah8GhBJzUOBYd_6VBu-pJpptrRnSWne9pCkf1ixnw1xtbuMnsDW3x1QtvaEPGp56BigSvLs40pRq1lmkUUkDNBDOE3N3A" />
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="text-center px-gutter py-stack-md bg-background/80 backdrop-blur-md border border-outline-variant">
+                        <span class="font-label-caps text-label-caps text-primary">RESOURCE VISUALIZER v2.0</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer Actions (Pinned) -->
+        <footer class="p-margin-page border-t border-outline-variant bg-surface-bright flex justify-end gap-stack-md">
+            <button class="px-8 py-4 border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors font-label-caps text-label-caps" @onclick="Close">
+                CANCEL
+            </button>
+            <button class="px-12 py-4 bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-2" @onclick="CreateResource">
+                <span>CREATE RESOURCE</span>
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+        </footer>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Inject]
+    public TurnFillDataService DataService { get; set; } = default!;
+
+    private Resource newResource = new Resource();
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+
+    private async Task CreateResource()
+    {
+        if (!string.IsNullOrWhiteSpace(newResource.Name))
+        {
+            newResource.Id = newResource.Name.ToLower().Replace(" ", "-");
+            // Roster default assignment removed for now
+            
+            await DataService.AddResource(newResource);
+            newResource = new Resource(); // Reset form
+            await Close();
+        }
+    }
+}

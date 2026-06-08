@@ -59,9 +59,16 @@ All commits have been recorded under your account (`intisor`) and pushed to the 
 13. **c49d975** - Add getting started guide with examples
     - GETTING_STARTED.md - Step-by-step implementation guide
 
+### Iterative Re-Alignment
+14. **de13b06** - UI Refactor: Align with core pillars, Tailwind layouts, .NET 10
+    - Upgraded target framework to .NET 10
+    - Rebuilt `Index.razor` and `AddNewResourceOverlay.razor` to match raw HTML designs
+    - Decoupled Roster logic from Consumables
+    - Removed incorrect `IsReminder` abstraction
+
 ## Statistics
 
-- **Total commits**: 13
+- **Total commits**: 14
 - **Files created**: 23
 - **Lines of code**: ~1,700+
 - **Languages**: C#, Razor, HTML, CSS, Markdown

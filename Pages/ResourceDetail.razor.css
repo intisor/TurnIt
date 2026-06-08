@@ -1,0 +1,15 @@
+/* ResourceDetail scoped CSS */
+
+.flat-chart-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: dash 2s ease-in-out forwards;
+}
+
+@keyframes dash {
+    to { stroke-dashoffset: 0; }
+}
+
+.status-header-bg {
+    background-color: #00285d; /* Oceanic Blue */
+}

@@ -1,0 +1,3 @@
+/* RosterManagement scoped CSS */
+.drag-handle { cursor: grab; }
+.drag-handle:active { cursor: grabbing; }
