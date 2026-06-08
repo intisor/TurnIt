@@ -10,6 +10,8 @@ public class TurnFillDataService
     
     public List<Resource> Resources { get; private set; } = new();
     public List<RosterParticipant> Members { get; private set; } = new();
+    public List<RosterSlot> ActiveScheduleSlots { get; private set; } = new();
+    public Roster? ActiveRoster { get; private set; }
 
     public event Action? OnStateChanged;
 
@@ -94,7 +96,7 @@ public class TurnFillDataService
                 else
                 {
                     // Generate slots if none exist
-                    var newSlots = RosterGenerator.Generate(defaultRoster, activeMembers, 30);
+                    var newSlots = RosterGenerator.Generate(defaultRoster, activeMembers, 90);
                     foreach(var slot in newSlots) await _storage.SaveRosterSlotAsync(slot);
                     if (newSlots.Any())
                     {
@@ -114,18 +116,28 @@ public class TurnFillDataService
             });
         }
         
+        if (defaultRoster != null)
+        {
+            ActiveRoster = defaultRoster;
+            var slots = await _storage.GetRosterSlotsAsync(defaultRoster.Id);
+            ActiveScheduleSlots = slots.OrderBy(s => s.SlotDate).ToList();
+        }
+
         Resources = newResources;
         NotifyStateChanged();
     }
 
-    public async Task RefillResource(string resourceId)
+    public async Task RefillResource(string resourceId, DateTime? date = null, decimal quantity = 1m, decimal? cost = null, string notes = "")
     {
         var res = Resources.FirstOrDefault(r => r.Id == resourceId);
         if (res?.OriginalConsumable != null)
         {
+            var refillDate = date.HasValue ? DateOnly.FromDateTime(date.Value) : DateOnly.FromDateTime(DateTime.Today);
             // Log Refill
-            var refill = new RefillEvent(Guid.NewGuid(), res.OriginalConsumable.Id, DateOnly.FromDateTime(DateTime.Today), 1m)
+            var refill = new RefillEvent(Guid.NewGuid(), res.OriginalConsumable.Id, refillDate, quantity)
             {
+                Cost = cost,
+                Notes = notes,
                 CreatedAt = DateTime.UtcNow
             };
             await _storage.SaveRefillAsync(refill);
@@ -191,7 +203,52 @@ public class TurnFillDataService
             {
                 await _storage.DeleteRosterSlotAsync(slot.Id);
             }
-            var newSlots = RosterGenerator.Generate(defaultRoster, activeMembers, 30);
+            var newSlots = RosterGenerator.Generate(defaultRoster, activeMembers, 90);
+            foreach(var slot in newSlots) await _storage.SaveRosterSlotAsync(slot);
+        }
+        await LoadDataAsync();
+    }
+
+    public async Task MarkSlotDone(Guid slotId)
+    {
+        var rosters = await _storage.GetRostersAsync(CurrentSpaceId);
+        var defaultRoster = rosters.FirstOrDefault();
+        if (defaultRoster != null)
+        {
+            var slots = await _storage.GetRosterSlotsAsync(defaultRoster.Id);
+            var activeSlot = slots.FirstOrDefault(s => s.Id == slotId);
+            if (activeSlot != null)
+            {
+                var updatedSlot = activeSlot with { IsDone = true, CompletedAt = DateTime.UtcNow };
+                await _storage.SaveRosterSlotAsync(updatedSlot);
+            }
+        }
+        await LoadDataAsync();
+    }
+
+    public async Task UpdateRosterConfig(RosterRotationType rotationType, DateTime startDate)
+    {
+        var rosters = await _storage.GetRostersAsync(CurrentSpaceId);
+        var defaultRoster = rosters.FirstOrDefault();
+        if (defaultRoster != null)
+        {
+            var updatedRoster = defaultRoster with { 
+                RotationType = rotationType,
+                ScheduleStartDate = DateOnly.FromDateTime(startDate) 
+            };
+            await _storage.SaveRosterAsync(updatedRoster);
+
+            // Re-generate roster slots for the new configuration
+            var members = await _storage.GetRosterMembersAsync(updatedRoster.Id);
+            var activeMembers = members.Where(mem => mem.IsActive).ToList();
+            var slots = await _storage.GetRosterSlotsAsync(updatedRoster.Id);
+            
+            // Delete incomplete slots and regenerate
+            foreach(var slot in slots.Where(s => !s.IsDone))
+            {
+                await _storage.DeleteRosterSlotAsync(slot.Id);
+            }
+            var newSlots = RosterGenerator.Generate(updatedRoster, activeMembers, 90);
             foreach(var slot in newSlots) await _storage.SaveRosterSlotAsync(slot);
         }
         await LoadDataAsync();
