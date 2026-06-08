@@ -87,23 +87,42 @@
                 <input class="w-10 h-5 rounded-full bg-surface-variant border-none text-primary focus:ring-primary" type="checkbox"/>
             </label>
             <div class="h-px bg-outline-variant mx-stack-sm"></div>
-            <button class="w-full flex items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors">
+            
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors gap-2">
                 <span class="font-body-md">Rotation Logic</span>
+                <select class="bg-surface-container-high border border-outline-variant rounded p-1 text-on-surface focus:outline-none focus:border-primary" @bind="selectedRotationType">
+                    <option value="@TurnIt.Models.RosterRotationType.Sequential">FIFO Sequential</option>
+                    <option value="@TurnIt.Models.RosterRotationType.WeeklyPattern">Weekly Pattern</option>
+                    <option value="@TurnIt.Models.RosterRotationType.Custom">Custom</option>
+                </select>
+            </div>
+            
+            <div class="h-px bg-outline-variant mx-stack-sm"></div>
+            
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-stack-sm hover:bg-surface-variant rounded transition-colors gap-2">
+                <span class="font-body-md">Schedule Start Date</span>
                 <div class="flex items-center gap-2">
-                    <span class="text-outline text-sm">FIFO Sequential</span>
-                    <span class="material-symbols-outlined text-outline">chevron_right</span>
+                    <input type="date" class="bg-surface-container-high border border-outline-variant rounded p-1 text-on-surface focus:outline-none focus:border-primary" @bind="selectedStartDate" />
+                    <button class="px-3 py-1 bg-primary-container text-on-primary-container font-label-caps text-[10px] rounded hover:brightness-110" @onclick="UpdateConfig">APPLY</button>
                 </div>
-            </button>
+            </div>
         </div>
     </section>
 </div>
 
 @code {
     private string newMemberName = "";
+    private TurnIt.Models.RosterRotationType selectedRotationType = TurnIt.Models.RosterRotationType.Sequential;
+    private DateTime selectedStartDate = DateTime.Today;
 
     protected override void OnInitialized()
     {
         DataService.OnStateChanged += StateHasChanged;
+        if (DataService.ActiveRoster != null)
+        {
+            selectedRotationType = DataService.ActiveRoster.RotationType;
+            selectedStartDate = DataService.ActiveRoster.ScheduleStartDate.ToDateTime(TimeOnly.MinValue);
+        }
     }
 
     public void Dispose()
@@ -128,5 +147,10 @@
             await DataService.AddMember(newMemberName);
             newMemberName = "";
         }
+    }
+
+    private async Task UpdateConfig()
+    {
+        await DataService.UpdateRosterConfig(selectedRotationType, selectedStartDate);
     }
 }
