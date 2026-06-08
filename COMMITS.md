@@ -60,7 +60,7 @@ All commits have been recorded under your account (`intisor`) and pushed to the 
     - GETTING_STARTED.md - Step-by-step implementation guide
 
 ### Iterative Re-Alignment
-14. **0efbe86** - UI Refactor: Align with core pillars, Tailwind layouts, .NET 10
+14. **e12bb26** - UI Refactor: Align with core pillars, Tailwind layouts, .NET 10
     - Upgraded target framework to .NET 10
     - Rebuilt `Index.razor` and `AddNewResourceOverlay.razor` to match raw HTML designs
     - Decoupled Roster logic from Consumables
