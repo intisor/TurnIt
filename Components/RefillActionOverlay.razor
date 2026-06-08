@@ -41,6 +41,28 @@
                     </div>
                 }
 
+                <!-- Refill Details Form -->
+                <div class="space-y-stack-sm mb-stack-lg">
+                    <div class="grid grid-cols-2 gap-stack-md">
+                        <div>
+                            <label class="block font-label-caps text-label-caps text-outline mb-1">REFILL DATE</label>
+                            <input type="date" class="w-full bg-surface-container-high border border-outline-variant rounded p-2 text-on-surface focus:outline-none focus:border-primary" @bind="refillDate" />
+                        </div>
+                        <div>
+                            <label class="block font-label-caps text-label-caps text-outline mb-1">QUANTITY</label>
+                            <input type="number" step="0.1" class="w-full bg-surface-container-high border border-outline-variant rounded p-2 text-on-surface focus:outline-none focus:border-primary" @bind="refillQuantity" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-label-caps text-label-caps text-outline mb-1">COST (OPTIONAL)</label>
+                        <input type="number" step="0.01" class="w-full bg-surface-container-high border border-outline-variant rounded p-2 text-on-surface focus:outline-none focus:border-primary" @bind="refillCost" placeholder="0.00" />
+                    </div>
+                    <div>
+                        <label class="block font-label-caps text-label-caps text-outline mb-1">NOTES</label>
+                        <textarea class="w-full bg-surface-container-high border border-outline-variant rounded p-2 text-on-surface focus:outline-none focus:border-primary" rows="2" @bind="refillNotes" placeholder="Add any details about this refill..."></textarea>
+                    </div>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-md">
                     <button class="w-full py-4 px-stack-md border border-outline font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-variant transition-colors rounded-lg flex items-center justify-center gap-base" @onclick="Close">
@@ -71,6 +93,22 @@
     [Inject]
     public TurnFillDataService DataService { get; set; } = default!;
 
+    private DateTime refillDate = DateTime.Today;
+    private decimal refillQuantity = 1m;
+    private decimal? refillCost = null;
+    private string refillNotes = "";
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible)
+        {
+            refillDate = DateTime.Today;
+            refillQuantity = 1m;
+            refillCost = null;
+            refillNotes = "";
+        }
+    }
+
     private async Task Close()
     {
         IsVisible = false;
@@ -81,7 +119,7 @@
     {
         if (TargetResource != null)
         {
-            await DataService.RefillResource(TargetResource.Id);
+            await DataService.RefillResource(TargetResource.Id, refillDate, refillQuantity, refillCost, refillNotes);
             await Close();
         }
     }
